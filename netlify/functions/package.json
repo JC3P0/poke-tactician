@@ -1,0 +1,15 @@
+{
+  "name": "poke-tactician-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for Poke-Tactician Gen 1 data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["pokemon", "gen1", "netlify-functions"],
+  "author": "Josh C.",
+  "license": "MIT",
+  "dependencies": {
+    "mongoose": "^8.0.0"
+  }
+}
