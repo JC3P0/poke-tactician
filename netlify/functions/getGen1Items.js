@@ -1,7 +1,19 @@
 const mongoose = require('mongoose');
 
-// Connect to MongoDB (uses DATABASE_URL environment variable from Netlify)
-mongoose.connect(process.env.DATABASE_URL);
+// Cache database connection across warm starts
+let cachedDb = null;
+
+async function connectToDatabase() {
+  if (cachedDb && mongoose.connection.readyState === 1) {
+    console.log('Using cached database connection');
+    return cachedDb;
+  }
+
+  console.log('Establishing new database connection');
+  await mongoose.connect(process.env.DATABASE_URL);
+  cachedDb = mongoose.connection.db;
+  return cachedDb;
+}
 
 /**
  * Gen 1 Battle-Usable Items
@@ -54,7 +66,8 @@ exports.handler = async (event, context) => {
   const { id, name, category } = event.queryStringParameters || {};
 
   try {
-    const db = mongoose.connection.db;
+    // Establish database connection
+    const db = await connectToDatabase();
     const itemsCollection = db.collection('items');
 
     // Single item query by ID or name
