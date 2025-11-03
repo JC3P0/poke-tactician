@@ -1,0 +1,156 @@
+/* client/src/styles/BaseLayout.css */
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-bar {
+  text-align: center;
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.loading-bar p {
+  font-size: 18px;
+  color: #333;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+.base-layout {
+  text-align: center;
+  padding: 20px;
+  background-image: url('https://raw.githubusercontent.com/JC3P0/misc_assets/main/Pokedex/background-image.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  padding-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.header-image {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  position: sticky;
+  margin-bottom: 20px;
+  border-radius: 15px;
+}
+
+.search-form {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.search-form input {
+  padding: 10px;
+  width: 200px;
+  margin: 0;
+  box-shadow: none;
+}
+
+.search-suggestions {
+  position: absolute;
+  background-color: white;
+  max-width: 220px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 25;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  top: 100%;
+  cursor: pointer;
+  display: none;
+}
+
+.search-form:focus-within .search-suggestions,
+.search-suggestions:hover {
+  display: block;
+}
+
+.search-suggestion {
+  padding: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.search-suggestion:hover {
+  background-color: #f0f0f0;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  outline: 2px inset #000;
+  border: none;
+  margin: 0 10px;
+  color: #000;
+}
+
+.tab.active {
+  background-color: #ccc;
+  outline: 3px outset #000;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+}
+
+input:disabled, button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.favorites {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.favorite-button {
+  background-color: green;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.favorite-button:hover {
+  background-color: darkgreen;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

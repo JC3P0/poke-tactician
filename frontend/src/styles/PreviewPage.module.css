@@ -1,0 +1,162 @@
+.categoryButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.categoryButton {
+  background-color: blue;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.categoryButton.active, .categoryButton:hover {
+  background-color: darkblue;
+}
+
+.previewContainer {
+  text-align: center;
+  padding: 20px;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  padding-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.previewList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.previewId {
+  position: absolute;
+  border: 2px outset #2a3439;
+  top: 7px;
+  left: 7px;
+  background-color: #C0C0C0;
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 0.8em;
+  font-weight: 500;
+  color: #333;
+}
+
+.previewFavoriteButton {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  background-color: #C0C0C0;
+  border: 2px inset #2a3439;
+  cursor: pointer;
+  font-size: 1.4em;
+  height: 26px;
+  padding: 2px 3px 0px 3px; /* top, right, bottom, left */
+  border-radius: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: #333;
+}
+
+.previewFavoriteButton.active {
+  position: absolute;
+  border: 2px outset #2a3439;
+  padding: 2px 0px 2px 1px; /* top, right, bottom, left */
+  font-size: 1em;
+}
+
+.previewFavoriteButton:hover {
+  transform: scale(1.1);
+}
+
+.previewCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+  padding: 10px;
+  border: 2px outset #2a3439;
+  border-radius: 15px;
+  text-align: center;
+  width: 127px;
+  height: fit-content;
+  z-index: 1;
+  box-sizing: border-box;
+  background-color: #566a74;
+}
+
+.previewCard img {
+  width: 100px;
+  height: auto;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-top: 20px;
+}
+
+.previewName {
+  background-color: #C0C0C0;
+  border: 2px outset #2a3439;
+  border-radius: 20px;
+  padding: 5px 10px;
+  margin-top: 0px;
+  margin-bottom: -18px;
+  font-size: 1em;
+  font-weight: 500;
+  color: #333;
+}
+
+.previewTypes {
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: absolute;
+  top: 50%;
+  transition: opacity 0.3s ease;
+  transform: translateY(-50%);
+}
+
+.previewType {
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 1em;
+  font-weight: 500;
+  text-align: center;
+  border: 2px outset #2a3439;
+  color: #ffffff;
+}
+
+.previewContainer .previewCard:hover .previewTypes {
+  opacity: 1;
+}
+
+/* Background styling for different Pokémon types */
+.previewContainer .normal { background: linear-gradient(to bottom right, #ACA974, rgba(214, 211, 173, 0.85)); }
+.previewContainer .fire { background: linear-gradient(to bottom right, #FC0C0B, rgb(252, 54, 54, 0.85)); }
+.previewContainer .fighting { background: linear-gradient(to bottom right, #800B11, rgba(175, 29, 36, 0.85)); }
+.previewContainer .water { background: linear-gradient(to bottom right, #08517A, rgba(35, 127, 180, 0.85)); }
+.previewContainer .flying { background: linear-gradient(to bottom right, #095865, rgba(32, 143, 160, 0.85)); }
+.previewContainer .grass { background: linear-gradient(to bottom right, #204000, rgba(63, 119, 8, 0.85)); }
+.previewContainer .poison { background: linear-gradient(to bottom right, #621481, rgba(155, 52, 196, 0.85)); }
+.previewContainer .electric { background: linear-gradient(to bottom right, #979203, rgba(197, 191, 20, 0.85)); }
+.previewContainer .ground { background: linear-gradient(to bottom right, #BFAC22, rgba(230, 206, 56, 0.85)); }
+.previewContainer .psychic { background: linear-gradient(to bottom right, #8B0633, rgba(194, 24, 81, 0.85)); }
+.previewContainer .rock { background: linear-gradient(to bottom right, #474026, rgba(131, 119, 76, 0.85)); }
+.previewContainer .ice { background: linear-gradient(to bottom right, #113C43, rgba(42, 119, 131, 0.85)); }
+.previewContainer .bug { background: linear-gradient(to bottom right, #91BA30, rgba(181, 216, 99, 0.85)); }
+.previewContainer .dragon { background: linear-gradient(to bottom right, #29036A, rgba(84, 24, 189, 0.85)); }
+.previewContainer .ghost { background: linear-gradient(to bottom right, #472B53, rgba(118, 76, 136, 0.85)); }
+.previewContainer .dark { background: linear-gradient(to bottom right, #2D221C, rgba(77, 59, 50, 0.85)); }
+.previewContainer .steel { background: linear-gradient(to bottom right, #454545, rgba(122, 117, 117, 0.85)); }
+.previewContainer .fairy { background: linear-gradient(to bottom right, #F87EA7, rgba(250, 149, 182, 0.85)); }
