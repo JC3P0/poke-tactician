@@ -24,13 +24,14 @@ const PokemonCustomizer = () => {
   });
   const [moves, setMoves] = useState([null, null, null, null]);
 
-  // Available moves (placeholder - will fetch from backend)
-  const [availableMoves, setAvailableMoves] = useState([
+  // Available moves (placeholder - will fetch from backend later)
+  // TODO: Fetch actual Gen 1 moves from backend API
+  const availableMoves = [
     { id: 1, name: 'Tackle', type: 'normal', power: 40 },
     { id: 2, name: 'Thunderbolt', type: 'electric', power: 90 },
     { id: 3, name: 'Ice Beam', type: 'ice', power: 90 },
     { id: 4, name: 'Earthquake', type: 'ground', power: 100 },
-  ]);
+  ];
 
   useEffect(() => {
     if (!pokemon) {
