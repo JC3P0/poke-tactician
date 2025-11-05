@@ -1,16 +1,21 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import PokemonPage from './pages/PokemonPage';
-import PokemonDetail from './pages/PokemonDetail';
+import HomePage from './pages/HomePage';
+import TeamBuilder from './pages/TeamBuilder';
+import PokemonCustomizer from './pages/PokemonCustomizer';
+import BossSelector from './pages/BossSelector';
+import BattleSimulator from './pages/BattleSimulator';
 import './App.css';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<PokemonPage />} />
-        <Route path="/pokemon" element={<PokemonPage />} />
-        <Route path="/pokemon/:id" element={<PokemonDetail />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/team-builder" element={<TeamBuilder />} />
+        <Route path="/customize/:id" element={<PokemonCustomizer />} />
+        <Route path="/boss-selector" element={<BossSelector />} />
+        <Route path="/battle" element={<BattleSimulator />} />
       </Routes>
     </Router>
   );
