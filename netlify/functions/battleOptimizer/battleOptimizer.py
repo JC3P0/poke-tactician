@@ -6,26 +6,28 @@ This serverless function implements a Pokemon Gen 1 battle optimizer using
 data structures and algorithms from CS_311 assignments.
 
 Data Structures Used:
-- Graph (Assignment 8): Battle state space representation
-- Hash Table (Assignment 7): Memoization cache
-- Heap (Assignment 6): Priority queue for move selection
-- Dijkstra's Algorithm (Assignment 9): Optimal path finding
+- Graph (Assignment 8 & 9): Battle state space representation + Dijkstra
+- Hash Table (Assignment 7): Memoization cache for DP
+- Heap (Assignment 6): Priority queue for Greedy move selection
 
 Author: Josh C.
 Date: December 2025
 """
 
 import json
+import sys
+import os
 from typing import Dict, List, Any
 
-# Import our data structures (to be implemented)
-# from dataStructures.graph import Graph
-# from dataStructures.hashtable import HashTable
-# from dataStructures.heap import Heap
-# from algorithms.dijkstra import findOptimalPath
-# from algorithms.greedy import GreedyOptimizer
-# from models.battleState import BattleState
-# from models.pokemon import Pokemon
+# Add current directory to path for imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from models.pokemon import Pokemon
+from models.battleState import BattleState
+from algorithms.greedy import run_greedy_optimizer
+from algorithms.dynamic_programming import run_dp_optimizer
+from algorithms.dijkstra import run_dijkstra_optimizer
+from data.bossTrainers import get_boss_trainer
 
 
 def handler(event, context):
@@ -34,18 +36,23 @@ def handler(event, context):
 
     Expected POST body:
     {
-        "yourTeam": [Pokemon objects],
-        "opponentTeam": [Pokemon objects],
-        "algorithm": "dijkstra" | "greedy" | "bfs"
+        "playerTeam": [Pokemon objects with name, level, types, base_stats, dvs, moves],
+        "opponentTeam": [Pokemon objects] OR "bossTrainer": "blue" | "giovanni" | "lance",
+        "algorithm": "greedy" | "dp" | "dijkstra" (default: "dijkstra")
     }
 
     Returns:
     {
         "success": true,
-        "strategy": [list of moves],
-        "totalDamage": int,
-        "totalTurns": int,
-        "algorithm": string
+        "algorithm": "dijkstra",
+        "result": {
+            "success": true,
+            "totalDamage": 500,
+            "turns": 5,
+            "moveSequence": ["Thunderbolt", "Thunder", ...],
+            "statesExplored": 150 (dijkstra only),
+            "cacheHitRate": 0.54 (dp only)
+        }
     }
     """
 
@@ -64,39 +71,96 @@ def handler(event, context):
     try:
         # Parse request body
         body = json.loads(event.get('body', '{}'))
-        your_team = body.get('yourTeam', [])
-        opponent_team = body.get('opponentTeam', [])
-        algorithm = body.get('algorithm', 'dijkstra')
 
-        # Validate input
-        if not your_team or not opponent_team:
-            return error_response('Missing team data', 400)
+        player_team_data = body.get('playerTeam', [])
+        algorithm = body.get('algorithm', 'dijkstra').lower()
 
-        # TODO: Implement optimization algorithms
-        # For now, return a placeholder response
-        result = {
-            'success': True,
-            'message': 'Optimizer under construction! Python structure ready.',
-            'algorithm': algorithm,
-            'yourTeam': your_team,
-            'opponentTeam': opponent_team,
-            'strategy': [],
-            'totalDamage': 0,
-            'totalTurns': 0
-        }
+        # Validate algorithm
+        if algorithm not in ['greedy', 'dp', 'dijkstra']:
+            return error_response(f'Invalid algorithm: {algorithm}. Must be greedy, dp, or dijkstra.', 400)
 
+        # Validate player team
+        if not player_team_data:
+            return error_response('Missing player team data', 400)
+
+        # Build player team
+        player_team = []
+        for pkmn_data in player_team_data:
+            try:
+                player_team.append(Pokemon.from_dict(pkmn_data))
+            except Exception as e:
+                return error_response(f'Invalid Pokemon data: {str(e)}', 400)
+
+        # Get opponent team (either custom or boss trainer)
+        opponent_team = []
+        if 'bossTrainer' in body:
+            boss_id = body['bossTrainer']
+            try:
+                boss_data = get_boss_trainer(boss_id)
+                opponent_team = boss_data['team']
+            except ValueError as e:
+                return error_response(str(e), 400)
+        elif 'opponentTeam' in body:
+            opponent_team_data = body['opponentTeam']
+            for pkmn_data in opponent_team_data:
+                try:
+                    opponent_team.append(Pokemon.from_dict(pkmn_data))
+                except Exception as e:
+                    return error_response(f'Invalid opponent Pokemon data: {str(e)}', 400)
+        else:
+            return error_response('Must provide either opponentTeam or bossTrainer', 400)
+
+        # Run the selected algorithm
+        if algorithm == 'greedy':
+            result = run_greedy_optimizer(player_team, opponent_team, max_turns=100)
+            response_data = {
+                'success': result.success,
+                'totalDamage': result.total_damage,
+                'turns': result.turns,
+                'moveSequence': result.move_sequence
+            }
+        elif algorithm == 'dp':
+            result = run_dp_optimizer(player_team, opponent_team, max_depth=50)
+            response_data = {
+                'success': result.success,
+                'totalDamage': result.total_damage,
+                'turns': result.turns,
+                'moveSequence': result.move_sequence,
+                'cacheHits': result.cache_hits,
+                'cacheMisses': result.cache_misses,
+                'cacheHitRate': result.get_cache_hit_rate(),
+                'statesExplored': result.states_explored
+            }
+        else:  # dijkstra
+            result = run_dijkstra_optimizer(player_team, opponent_team, max_states=500)
+            response_data = {
+                'success': result.success,
+                'totalDamage': result.total_damage,
+                'turns': result.turns,
+                'moveSequence': result.move_sequence,
+                'statesExplored': result.states_explored,
+                'pathCost': result.path_cost
+            }
+
+        # Return success response
         return {
             'statusCode': 200,
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            'body': json.dumps(result)
+            'body': json.dumps({
+                'success': True,
+                'algorithm': algorithm,
+                'result': response_data
+            })
         }
 
     except json.JSONDecodeError:
         return error_response('Invalid JSON in request body', 400)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return error_response(f'Internal server error: {str(e)}', 500)
 
 
@@ -117,19 +181,23 @@ def error_response(message: str, status_code: int) -> Dict[str, Any]:
 
 # For local testing
 if __name__ == '__main__':
+    from models.pokemon import create_pikachu, create_charizard
+
+    # Test with actual Pokemon objects
+    pikachu = create_pikachu(level=50)
+    charizard = create_charizard(level=50)
+
     test_event = {
         'httpMethod': 'POST',
         'body': json.dumps({
-            'yourTeam': [
-                {'id': 25, 'name': 'Pikachu', 'level': 100}
-            ],
-            'opponentTeam': [
-                {'id': 19, 'name': 'Rattata', 'level': 5}
-            ],
-            'algorithm': 'dijkstra'
+            'playerTeam': [pikachu.to_dict()],
+            'opponentTeam': [charizard.to_dict()],
+            'algorithm': 'greedy'
         })
     }
 
+    print("Testing Battle Optimizer locally...")
+    print("=" * 60)
     response = handler(test_event, None)
     print('Status Code:', response['statusCode'])
-    print('Body:', json.loads(response['body']))
+    print('Body:', json.dumps(json.loads(response['body']), indent=2))
