@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchPokemon } from '../utils/api';
 import teamBuilderStyles from '../styles/TeamBuilder.module.css';
 import typeColors from '../utils/typeColors';
 import { getImageOrPlaceholder } from '../utils/getImageOrPlaceholder';
@@ -11,38 +12,12 @@ const TeamBuilder = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch Gen 1 Pokemon from backend
+  // Fetch Gen 1 Pokemon from MongoDB backend
   useEffect(() => {
-    const fetchPokemon = async () => {
+    const loadPokemon = async () => {
       try {
-        // TODO: Replace with actual backend API endpoint
-        // For now, use mock data or PokéAPI directly
-        const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
-        const data = await response.json();
-
-        // Fetch detailed info for each Pokemon
-        const pokemonDetails = await Promise.all(
-          data.results.map(async (pokemon) => {
-            const res = await fetch(pokemon.url);
-            const details = await res.json();
-            return {
-              id: details.id,
-              name: details.name,
-              types: details.types.map(t => t.type.name),
-              sprites: details.sprites,
-              base_stats: {
-                hp: details.stats[0].base_stat,
-                attack: details.stats[1].base_stat,
-                defense: details.stats[2].base_stat,
-                // Gen 1 uses unified Special stat (use Sp.Atk as base)
-                special: details.stats[3].base_stat,
-                speed: details.stats[5].base_stat
-              }
-            };
-          })
-        );
-
-        setAllPokemon(pokemonDetails);
+        const pokemonData = await fetchPokemon();
+        setAllPokemon(pokemonData);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -50,7 +25,7 @@ const TeamBuilder = () => {
       }
     };
 
-    fetchPokemon();
+    loadPokemon();
   }, []);
 
   // Add Pokemon to team (max 6)
