@@ -15,10 +15,11 @@ const BossSelector = () => {
     const loadBossTrainers = async () => {
       try {
         const trainers = await fetchBossTrainers();
-        setBossTrainers(trainers);
+        setBossTrainers(trainers || {});
         setLoading(false);
       } catch (err) {
-        setError(err.message);
+        console.error('Failed to load boss trainers:', err);
+        setError(err.message || 'Failed to load boss trainers');
         setLoading(false);
       }
     };
@@ -78,8 +79,21 @@ const BossSelector = () => {
         Your team has {team.length} Pokemon. Choose a boss trainer to challenge!
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-        {Object.entries(bossTrainers).map(([bossId, boss]) => (
+      {Object.keys(bossTrainers).length === 0 ? (
+        <div style={{
+          background: 'rgba(255,203,5,0.2)',
+          padding: '2rem',
+          borderRadius: '12px',
+          textAlign: 'center',
+          marginTop: '2rem'
+        }}>
+          <p style={{ fontSize: '1.2rem', color: '#ffcb05' }}>
+            Loading boss trainers... If this persists, the battle optimizer backend may not be deployed yet.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
+          {Object.entries(bossTrainers).map(([bossId, boss]) => (
           <div
             key={bossId}
             onClick={() => selectBoss(bossId)}
@@ -116,7 +130,8 @@ const BossSelector = () => {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
