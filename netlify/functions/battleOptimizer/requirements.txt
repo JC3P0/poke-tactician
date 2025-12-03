@@ -1,0 +1,6 @@
+# Python dependencies for Pokemon Battle Optimizer
+# Most data structures are implemented from scratch (CS_311 assignments)
+# Minimal external dependencies needed
+
+# No external dependencies required for now
+# All data structures (Graph, HashTable, Heap) implemented from scratch
