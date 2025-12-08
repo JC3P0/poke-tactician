@@ -50,9 +50,9 @@ class BattleOptimizerService:
         boss_trainer_id: Optional[str] = None,
         algorithm: str = "dijkstra",
         player_level: int = 50,
-        max_turns: int = 100,
-        max_depth: int = 100,  # Increased from 50 to 100 for longer battles
-        max_states: int = 500000  # Increased from 100k to 500k for complex 6v6 battles
+        max_turns: int = 75,  # Balanced: Allows long battles but prevents runaway
+        max_depth: int = 40,  # DP: Reasonable depth with memoization
+        max_states: int = 20000  # Dijkstra: Big reduction but enough for complex battles
     ) -> Dict[str, Any]:
         """
         Optimize a Pokemon battle using the specified algorithm.

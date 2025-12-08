@@ -228,6 +228,10 @@ class BattleState:
             # Calculate damage
             damage = DamageCalculator.calculate_damage(attacker, defender, move)
 
+            # OPTIMIZATION: Skip immune moves (0 damage) to reduce graph size
+            if damage == 0:
+                continue  # Don't explore this branch
+
             # Apply damage
             defender.take_damage(damage)
 
@@ -274,8 +278,9 @@ class BattleState:
                         min_priority = min(p for _, p in move_priorities)
                         best_moves = [m for m, p in move_priorities if p == min_priority]
 
-                        # Randomly select from best moves (Gen 1 behavior)
-                        best_move = random.choice(best_moves)
+                        # DETERMINISTIC selection for graph exploration (prevents state explosion)
+                        # Pick highest power move among best moves for consistent state graph
+                        best_move = max(best_moves, key=lambda m: m.power)
 
                         counter_damage = DamageCalculator.calculate_damage(
                             opponent_attacker, player_defender, best_move
