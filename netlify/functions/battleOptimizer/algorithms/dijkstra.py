@@ -21,7 +21,12 @@ CS_311 Extra Credit Project
 
 import sys
 import os
+import logging
 from typing import List, Tuple, Optional, Dict
+
+# Configure logging for AWS Lambda
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -112,10 +117,14 @@ class DijkstraBattleOptimizer:
 
         Space Complexity: O(V + E) for the graph
         """
+        logger.info(f"[DIJKSTRA] Starting optimization with max_states={self.max_states}")
+
         # Build the battle state graph
         graph, state_to_vertex, vertex_to_state, move_labels = self._build_graph(
             initial_state
         )
+
+        logger.info(f"[DIJKSTRA] Graph built with {graph.get_num_verts()} vertices")
 
         if graph.get_num_verts() == 0:
             # No graph built (shouldn't happen)
@@ -145,11 +154,11 @@ class DijkstraBattleOptimizer:
                 else:
                     defeat_count += 1
 
-        print(f"[DEBUG] Found {len(terminal_vertices)} terminal states: {victory_count} victories, {defeat_count} defeats")
+        logger.info(f"[DIJKSTRA] Found {len(terminal_vertices)} terminal states: {victory_count} victories, {defeat_count} defeats")
 
         if not terminal_vertices:
             # No terminal state found (shouldn't happen if we explored properly)
-            print(f"[DEBUG] No terminal states found after exploring {graph.get_num_verts()} states!")
+            logger.error(f"[DIJKSTRA] No terminal states found after exploring {graph.get_num_verts()} states!")
             return DijkstraResult(
                 success=False,
                 total_damage=0,
@@ -202,10 +211,12 @@ class DijkstraBattleOptimizer:
             else:
                 paths_not_found += 1
 
-        print(f"[DEBUG] Paths found: {paths_found}, Paths not found: {paths_not_found}")
-        print(f"[DEBUG] Best victory path: {victory_path is not None}, Best defeat path: {defeat_path is not None}")
+        logger.info(f"[DIJKSTRA] Paths found: {paths_found}, Paths not found: {paths_not_found}")
+        logger.info(f"[DIJKSTRA] Best victory path: {victory_path is not None}, Best defeat path: {defeat_path is not None}")
         if defeat_path:
-            print(f"[DEBUG] Defeat path damage: {defeat_damage}, path length: {len(defeat_path)}")
+            logger.info(f"[DIJKSTRA] Defeat path damage: {defeat_damage}, path length: {len(defeat_path)}")
+        else:
+            logger.warning(f"[DIJKSTRA] No defeat path found even though {defeat_count} defeat states exist!")
 
         # Choose best result: Victory > Defeat with max damage
         if victory_path:
