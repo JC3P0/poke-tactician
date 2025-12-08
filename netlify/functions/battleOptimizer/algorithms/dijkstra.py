@@ -78,12 +78,13 @@ class DijkstraBattleOptimizer:
     Strategy: Build battle state graph and find shortest path to victory.
     """
 
-    def __init__(self, max_states: int = 500):
+    def __init__(self, max_states: int = 100000):
         """
         Create a Dijkstra optimizer.
 
         Args:
             max_states: Maximum states to explore (prevents memory issues)
+                       Default: 100,000 (sufficient for most battles)
         """
         self.max_states = max_states
 
@@ -317,7 +318,7 @@ class DijkstraBattleOptimizer:
 def run_dijkstra_optimizer(
     player_team: List[Pokemon],
     opponent_team: List[Pokemon],
-    max_states: int = 500
+    max_states: int = 100000
 ) -> DijkstraResult:
     """
     Convenience function to run Dijkstra optimizer on teams.

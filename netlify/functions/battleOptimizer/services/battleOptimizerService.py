@@ -52,7 +52,7 @@ class BattleOptimizerService:
         player_level: int = 50,
         max_turns: int = 100,
         max_depth: int = 50,
-        max_states: int = 500
+        max_states: int = 100000  # Increased from 500 to 100k for complex battles
     ) -> Dict[str, Any]:
         """
         Optimize a Pokemon battle using the specified algorithm.
@@ -67,7 +67,7 @@ class BattleOptimizerService:
             player_level: Level for player's Pokemon (default 50)
             max_turns: Max turns for greedy algorithm (default 100)
             max_depth: Max depth for DP algorithm (default 50)
-            max_states: Max states for Dijkstra algorithm (default 500)
+            max_states: Max states for Dijkstra algorithm (default 100,000)
 
         Returns:
             Dictionary with optimization results
