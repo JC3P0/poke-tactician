@@ -5,6 +5,7 @@ import TeamBuilder from './pages/TeamBuilder';
 import PokemonCustomizer from './pages/PokemonCustomizer';
 import BossSelector from './pages/BossSelector';
 import BattleSimulator from './pages/BattleSimulator';
+import Results from './pages/Results';
 import './App.css';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/customize/:id" element={<PokemonCustomizer />} />
         <Route path="/boss-selector" element={<BossSelector />} />
         <Route path="/battle" element={<BattleSimulator />} />
+        <Route path="/results" element={<Results />} />
       </Routes>
     </Router>
   );
