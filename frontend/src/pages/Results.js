@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { optimizeBattle, fetchBossTrainers } from '../utils/api';
+import { optimizeBattle } from '../utils/api';
 
 const Results = () => {
   const navigate = useNavigate();
