@@ -28,7 +28,7 @@ const BossSelector = () => {
   }, []);
 
   const selectBoss = (bossId) => {
-    navigate('/battle', {
+    navigate('/results', {
       state: {
         team,
         bossTrainer: bossId

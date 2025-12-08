@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchPokemon } from '../utils/api';
+import { loadTeam, removePokemonFromTeam, clearTeam } from '../utils/indexedDB';
 import teamBuilderStyles from '../styles/TeamBuilder.module.css';
 import typeColors from '../utils/typeColors';
 import { getImageOrPlaceholder } from '../utils/getImageOrPlaceholder';
@@ -28,32 +29,48 @@ const TeamBuilder = () => {
     loadPokemon();
   }, []);
 
-  // Add Pokemon to team (max 6)
-  const addToTeam = (pokemon) => {
-    if (team.length >= 6) {
+  // Load saved team from IndexedDB
+  useEffect(() => {
+    const loadSavedTeam = async () => {
+      try {
+        const savedTeam = await loadTeam();
+        setTeam(savedTeam);
+      } catch (err) {
+        console.error('Error loading team from IndexedDB:', err);
+      }
+    };
+
+    loadSavedTeam();
+  }, []);
+
+  // Navigate to customizer when clicking a Pokemon
+  const selectPokemon = (pokemon) => {
+    if (team.length >= 6 && !team.some(p => p.id === pokemon.id)) {
       alert('Your team is full! Remove a Pokemon first.');
       return;
     }
 
     if (team.some(p => p.id === pokemon.id)) {
-      alert('This Pokemon is already on your team!');
+      alert('This Pokemon is already on your team! Edit it from the team section above.');
       return;
     }
 
-    // Add with default stats (will be customized later)
-    const teamMember = {
-      ...pokemon,
-      level: 100, // Default level
-      dvs: { hp: 15, attack: 15, defense: 15, special: 15, speed: 15 }, // Max DVs
-      moves: [] // Will be set in customizer
-    };
-
-    setTeam([...team, teamMember]);
+    // Navigate to customizer to set level, DVs, and moves
+    navigate(`/customize/${pokemon.id}`, { state: { pokemon } });
   };
 
-  // Remove Pokemon from team
-  const removeFromTeam = (pokemonId) => {
+  // Remove Pokemon from team and IndexedDB
+  const removeFromTeam = async (pokemonId) => {
+    await removePokemonFromTeam(pokemonId);
     setTeam(team.filter(p => p.id !== pokemonId));
+  };
+
+  // Clear entire team
+  const handleClearTeam = async () => {
+    if (window.confirm('Are you sure you want to clear your entire team?')) {
+      await clearTeam();
+      setTeam([]);
+    }
   };
 
   // Navigate to customizer
@@ -84,13 +101,33 @@ const TeamBuilder = () => {
           ← Home
         </button>
         <h1 className={teamBuilderStyles.title}>Build Your Team</h1>
-        <button
-          className={teamBuilderStyles.nextButton}
-          onClick={proceedToBattle}
-          disabled={team.length === 0}
-        >
-          Battle! →
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          {team.length > 0 && (
+            <button
+              className={teamBuilderStyles.clearButton}
+              onClick={handleClearTeam}
+              style={{
+                background: '#e74c3c',
+                color: 'white',
+                padding: '0.8rem 1.5rem',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              Clear Team
+            </button>
+          )}
+          <button
+            className={teamBuilderStyles.nextButton}
+            onClick={proceedToBattle}
+            disabled={team.length === 0}
+          >
+            Battle! →
+          </button>
+        </div>
       </div>
 
       {/* Team Display (Top Section) */}
@@ -152,7 +189,8 @@ const TeamBuilder = () => {
               <div
                 key={pokemon.id}
                 className={`${teamBuilderStyles.pokemonCard} ${isOnTeam ? teamBuilderStyles.onTeam : ''}`}
-                onClick={() => !isOnTeam && addToTeam(pokemon)}
+                onClick={() => !isOnTeam && selectPokemon(pokemon)}
+                style={{ cursor: isOnTeam ? 'not-allowed' : 'pointer' }}
               >
                 <div className={teamBuilderStyles.pokemonId}>#{pokemon.id}</div>
                 <img
