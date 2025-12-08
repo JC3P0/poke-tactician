@@ -38,7 +38,7 @@ class BattleEvent:
 def replay_battle(
     initial_state: BattleState,
     move_sequence: List[str]
-) -> List[Dict[str, Any]]:
+) -> tuple[List[Dict[str, Any]], BattleState]:
     """
     Replay a battle with detailed logging.
 
@@ -47,7 +47,9 @@ def replay_battle(
         move_sequence: List of move names to execute
 
     Returns:
-        List of battle events with full details
+        Tuple of (battle_log, final_state)
+        - battle_log: List of battle events with full details
+        - final_state: Final battle state after all moves executed
     """
     battle_log = []
     state = initial_state.copy()
@@ -222,4 +224,4 @@ def replay_battle(
             })
             break
 
-    return battle_log
+    return battle_log, state
