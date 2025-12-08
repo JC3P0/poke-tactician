@@ -117,6 +117,17 @@ class BattleOptimizerService:
         formatted_result["playerTeamSize"] = len(player_team)
         formatted_result["opponentTeamSize"] = len(opponent_team)
 
+        # Add opponent team details for display
+        formatted_result["opponentTeam"] = [
+            {
+                "name": p.name,
+                "level": p.level,
+                "types": p.types,
+                "maxHp": p.max_hp
+            }
+            for p in opponent_team
+        ]
+
         return formatted_result
 
     @staticmethod

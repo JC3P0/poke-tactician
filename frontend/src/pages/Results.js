@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { optimizeBattle } from '../utils/api';
+import { optimizeBattle, fetchBossTrainers } from '../utils/api';
 
 const Results = () => {
   const navigate = useNavigate();
@@ -152,14 +152,40 @@ const Results = () => {
       </div>
 
       {/* Team Info */}
-      <div style={{ background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
-        <h3>Your Team ({team.length} Pokemon) vs. {bossTrainer}</h3>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {team.map(p => (
-            <span key={p.id} style={{ background: 'rgba(255,203,5,0.2)', padding: '0.5rem 1rem', borderRadius: '4px' }}>
-              {p.name} (Lv. {p.level})
-            </span>
-          ))}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '2rem', marginBottom: '2rem', alignItems: 'center' }}>
+        {/* Your Team */}
+        <div style={{ background: 'rgba(46, 204, 113, 0.2)', padding: '1rem', borderRadius: '8px', border: '2px solid rgba(46, 204, 113, 0.5)' }}>
+          <h3 style={{ color: '#2ecc71', marginBottom: '0.75rem' }}>Your Team ({team.length} Pokemon)</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {team.map((p, i) => (
+              <div key={p.id} style={{ background: 'rgba(46, 204, 113, 0.3)', padding: '0.5rem', borderRadius: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 'bold' }}>{i + 1}. {p.name}</span>
+                <span style={{ opacity: 0.8 }}>Lv. {p.level}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* VS */}
+        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#e74c3c', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
+          VS
+        </div>
+
+        {/* Boss Team */}
+        <div style={{ background: 'rgba(231, 76, 60, 0.2)', padding: '1rem', borderRadius: '8px', border: '2px solid rgba(231, 76, 60, 0.5)' }}>
+          <h3 style={{ color: '#e74c3c', marginBottom: '0.75rem' }}>{bossTrainer} Team</h3>
+          {results.greedy?.opponentTeam || results.dp?.opponentTeam || results.dijkstra?.opponentTeam ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {(results.greedy?.opponentTeam || results.dp?.opponentTeam || results.dijkstra?.opponentTeam).map((p, i) => (
+                <div key={i} style={{ background: 'rgba(231, 76, 60, 0.3)', padding: '0.5rem', borderRadius: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: 'bold' }}>{i + 1}. {p.name}</span>
+                  <span style={{ opacity: 0.8 }}>Lv. {p.level}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ opacity: 0.7 }}>Loading opponent team...</div>
+          )}
         </div>
       </div>
 
@@ -227,22 +253,67 @@ const Results = () => {
                 </div>
 
                 <div>
-                  <strong>Move Sequence:</strong>
+                  <strong>Battle Log ({result.turns} turns):</strong>
                   <div style={{
-                    maxHeight: '200px',
+                    maxHeight: '300px',
                     overflowY: 'auto',
                     background: 'rgba(0,0,0,0.3)',
-                    padding: '0.5rem',
+                    padding: '0.75rem',
                     borderRadius: '4px',
                     marginTop: '0.5rem',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    lineHeight: '1.6'
                   }}>
                     {result.moveSequence && result.moveSequence.length > 0 ? (
                       result.moveSequence.map((move, i) => (
-                        <div key={i}>{i + 1}. {move}</div>
+                        <div key={i} style={{
+                          padding: '0.25rem 0',
+                          borderBottom: i < result.moveSequence.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          <span style={{
+                            color: '#ffcb05',
+                            fontWeight: 'bold',
+                            minWidth: '3.5rem',
+                            opacity: 0.8
+                          }}>
+                            Turn {i + 1}:
+                          </span>
+                          <span style={{ fontWeight: 'bold', color: '#3498db' }}>
+                            {move}
+                          </span>
+                        </div>
                       ))
                     ) : (
-                      <div>No moves recorded</div>
+                      <div style={{ opacity: 0.6, fontStyle: 'italic' }}>No moves recorded</div>
+                    )}
+                    {result.victory && (
+                      <div style={{
+                        marginTop: '0.75rem',
+                        padding: '0.5rem',
+                        background: 'rgba(46, 204, 113, 0.3)',
+                        borderRadius: '4px',
+                        color: '#2ecc71',
+                        fontWeight: 'bold',
+                        textAlign: 'center'
+                      }}>
+                        🎉 Victory! All opponent Pokemon defeated!
+                      </div>
+                    )}
+                    {!result.victory && result.turns > 0 && (
+                      <div style={{
+                        marginTop: '0.75rem',
+                        padding: '0.5rem',
+                        background: 'rgba(231, 76, 60, 0.3)',
+                        borderRadius: '4px',
+                        color: '#e74c3c',
+                        fontWeight: 'bold',
+                        textAlign: 'center'
+                      }}>
+                        ☠️ Defeat - All your Pokemon fainted
+                      </div>
                     )}
                   </div>
                 </div>
