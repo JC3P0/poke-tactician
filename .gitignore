@@ -343,6 +343,9 @@ $RECYCLE.BIN/
 # Netlify
 .netlify/
 
+# AWS Lambda deployment artifacts
+lambda-deploy/
+
 # Project-specific
 docs/
 CLAUDE.md

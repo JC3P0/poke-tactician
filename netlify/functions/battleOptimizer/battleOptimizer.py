@@ -29,7 +29,7 @@ from services.battleOptimizerService import BattleOptimizerService
 
 def handler(event, context):
     """
-    Netlify serverless function handler.
+    AWS Lambda function handler (works with Lambda Function URLs).
 
     Expected POST body:
     {
@@ -62,20 +62,27 @@ def handler(event, context):
     }
     """
 
+    # Get HTTP method (Lambda Function URL format)
+    http_method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
+
+    # Fallback to API Gateway format
+    if not http_method or http_method == 'GET':
+        http_method = event.get('httpMethod', 'GET')
+
     # Handle CORS preflight
-    if event.get('httpMethod') == 'OPTIONS':
+    if http_method == 'OPTIONS':
         return {
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
             },
             'body': ''
         }
 
     # Handle GET request for boss trainer list
-    if event.get('httpMethod') == 'GET':
+    if http_method == 'GET':
         try:
             boss_trainers = BattleOptimizerService.get_boss_trainers()
             return success_response({"bossTrainers": boss_trainers})
