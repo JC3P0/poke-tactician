@@ -38,7 +38,7 @@ class PokemonDataService:
     """
 
     @staticmethod
-    def from_mongodb(data: Dict[str, Any], level: int = 50, move_names: Optional[List[str]] = None) -> Pokemon:
+    def from_mongodb(data: Dict[str, Any], level: int = 50, move_names: Optional[List[str]] = None, dvs: Optional[Dict[str, int]] = None) -> Pokemon:
         """
         Convert MongoDB Pokemon data to a Pokemon object.
 
@@ -91,14 +91,21 @@ class PokemonDataService:
             "Special": base_stats_raw.get('special', 50)
         }
 
-        # Default DVs to max (15) for competitive battles
-        dvs = {
-            "HP": 15,
-            "Attack": 15,
-            "Defense": 15,
-            "Speed": 15,
-            "Special": 15
-        }
+        # Use custom DVs if provided, otherwise default to max (15)
+        if dvs is None:
+            dvs = {
+                "HP": 15,
+                "Attack": 15,
+                "Defense": 15,
+                "Speed": 15,
+                "Special": 15
+            }
+        else:
+            # Ensure all required stats are present
+            default_dvs = {"HP": 15, "Attack": 15, "Defense": 15, "Speed": 15, "Special": 15}
+            for stat in default_dvs:
+                if stat not in dvs:
+                    dvs[stat] = default_dvs[stat]
 
         # Handle moves
         available_moves = data.get('moves', [])
@@ -137,15 +144,32 @@ class PokemonDataService:
 
         Args:
             data_list: List of MongoDB Pokemon data dictionaries
-            level: Pokemon level for all Pokemon (default 50)
+            level: Default Pokemon level (used if individual Pokemon doesn't specify)
 
         Returns:
             List of Pokemon objects
         """
-        return [
-            PokemonDataService.from_mongodb(data, level=level)
-            for data in data_list
-        ]
+        pokemon_list = []
+        for data in data_list:
+            # Use individual Pokemon's level if provided, otherwise use default
+            poke_level = data.get('level', level)
+
+            # Use individual Pokemon's DVs if provided
+            poke_dvs = data.get('dvs', None)
+
+            # Use individual Pokemon's selected moves if provided
+            move_names = data.get('selectedMoves', data.get('moves', None))
+
+            pokemon_list.append(
+                PokemonDataService.from_mongodb(
+                    data,
+                    level=poke_level,
+                    move_names=move_names,
+                    dvs=poke_dvs
+                )
+            )
+
+        return pokemon_list
 
     @staticmethod
     def to_api_response(pokemon: Pokemon) -> Dict[str, Any]:

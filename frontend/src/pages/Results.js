@@ -255,39 +255,80 @@ const Results = () => {
                 <div>
                   <strong>Battle Log ({result.turns} turns):</strong>
                   <div style={{
-                    maxHeight: '300px',
+                    maxHeight: '400px',
                     overflowY: 'auto',
                     background: 'rgba(0,0,0,0.3)',
                     padding: '0.75rem',
                     borderRadius: '4px',
                     marginTop: '0.5rem',
-                    fontSize: '0.9rem',
-                    lineHeight: '1.6'
+                    fontSize: '0.85rem',
+                    lineHeight: '1.5'
                   }}>
-                    {result.moveSequence && result.moveSequence.length > 0 ? (
+                    {result.battleLog && result.battleLog.length > 0 ? (
+                      result.battleLog.map((event, i) => {
+                        if (event.event === 'player_attack' || event.event === 'opponent_attack') {
+                          const isPlayer = event.event === 'player_attack';
+                          const effectiveness = event.effectiveness === 2 ? ' (Super Effective!)' :
+                                               event.effectiveness === 4 ? ' (4x Super Effective!!)' :
+                                               event.effectiveness === 0.5 ? ' (Not Very Effective)' :
+                                               event.effectiveness === 0.25 ? ' (Barely Effective)' :
+                                               event.effectiveness === 0 ? ' (No Effect!)' : '';
+
+                          return (
+                            <div key={i} style={{
+                              padding: '0.5rem',
+                              marginBottom: '0.5rem',
+                              background: isPlayer ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)',
+                              borderLeft: `3px solid ${isPlayer ? '#2ecc71' : '#e74c3c'}`,
+                              borderRadius: '4px'
+                            }}>
+                              <div style={{ fontWeight: 'bold', color: isPlayer ? '#2ecc71' : '#e74c3c', marginBottom: '0.25rem' }}>
+                                Turn {event.turn} - {isPlayer ? '⚔️ YOU' : '🐉 OPPONENT'}
+                              </div>
+                              <div style={{ opacity: 0.9 }}>
+                                <span style={{ color: '#ffcb05' }}>{event.attacker.name}</span> used <span style={{ color: '#3498db', fontWeight: 'bold' }}>{event.move}</span>{effectiveness}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                                {event.defender.name}: {event.defender.hpBefore} → {event.defender.hpAfter} HP ({-event.damage} damage)
+                              </div>
+                            </div>
+                          );
+                        } else if (event.event === 'faint') {
+                          return (
+                            <div key={i} style={{
+                              padding: '0.4rem',
+                              marginBottom: '0.3rem',
+                              background: 'rgba(0,0,0,0.4)',
+                              borderRadius: '4px',
+                              fontStyle: 'italic',
+                              color: '#95a5a6'
+                            }}>
+                              💀 {event.pokemon.name} fainted!
+                            </div>
+                          );
+                        } else if (event.event === 'switch') {
+                          return (
+                            <div key={i} style={{
+                              padding: '0.4rem',
+                              marginBottom: '0.3rem',
+                              background: 'rgba(52, 152, 219, 0.2)',
+                              borderRadius: '4px',
+                              color: '#3498db'
+                            }}>
+                              ↔️ {event.pokemon.team === 'player' ? 'You sent out' : 'Opponent sent out'} {event.pokemon.name}! (HP: {event.pokemon.hp}/{event.pokemon.maxHp})
+                            </div>
+                          );
+                        }
+                        return null;
+                      })
+                    ) : result.moveSequence && result.moveSequence.length > 0 ? (
                       result.moveSequence.map((move, i) => (
-                        <div key={i} style={{
-                          padding: '0.25rem 0',
-                          borderBottom: i < result.moveSequence.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
-                        }}>
-                          <span style={{
-                            color: '#ffcb05',
-                            fontWeight: 'bold',
-                            minWidth: '3.5rem',
-                            opacity: 0.8
-                          }}>
-                            Turn {i + 1}:
-                          </span>
-                          <span style={{ fontWeight: 'bold', color: '#3498db' }}>
-                            {move}
-                          </span>
+                        <div key={i} style={{ padding: '0.25rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                          <span style={{ color: '#ffcb05', fontWeight: 'bold' }}>Turn {i + 1}:</span> {move}
                         </div>
                       ))
                     ) : (
-                      <div style={{ opacity: 0.6, fontStyle: 'italic' }}>No moves recorded</div>
+                      <div style={{ opacity: 0.6, fontStyle: 'italic' }}>No battle log available</div>
                     )}
                     {result.victory && (
                       <div style={{
