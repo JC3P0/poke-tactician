@@ -6,11 +6,12 @@ const pokemonStore = "pokemon";
 const itemsStore = "items";
 const pokemonFavoritesStore = "pokemonFavorites";
 const itemFavoritesStore = "itemFavorites";
+const teamStore = "team";
 
 // Function to open the IndexedDB database
 const openDB = () => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, 1);
+    const request = indexedDB.open(dbName, 2); // Increment version to trigger upgrade
 
     // Handle database upgrades
     request.onupgradeneeded = (event) => {
@@ -27,6 +28,9 @@ const openDB = () => {
       }
       if (!db.objectStoreNames.contains(itemFavoritesStore)) {
         db.createObjectStore(itemFavoritesStore, { keyPath: "_id" });
+      }
+      if (!db.objectStoreNames.contains(teamStore)) {
+        db.createObjectStore(teamStore, { keyPath: "id" });
       }
     };
 
@@ -204,4 +208,111 @@ export const toggleItemFavoriteInIndexedDB = async (_id, entity) => {
     console.log(`Added ${entity.name} to favorites`);
   }
   return transaction.complete;
+};
+
+// ========== TEAM MANAGEMENT FUNCTIONS ==========
+
+// Function to save entire team to IndexedDB
+export const saveTeam = async (team) => {
+  try {
+    const db = await openDB();
+    const transaction = db.transaction(teamStore, "readwrite");
+    const store = transaction.objectStore(teamStore);
+
+    // Clear existing team
+    await new Promise((resolve, reject) => {
+      const clearRequest = store.clear();
+      clearRequest.onsuccess = () => resolve();
+      clearRequest.onerror = () => reject(clearRequest.error);
+    });
+
+    // Add each Pokemon
+    for (const pokemon of team) {
+      await new Promise((resolve, reject) => {
+        const addRequest = store.put(pokemon);
+        addRequest.onsuccess = () => resolve();
+        addRequest.onerror = () => reject(addRequest.error);
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error saving team to IndexedDB:", error);
+    return false;
+  }
+};
+
+// Function to load team from IndexedDB
+export const loadTeam = async () => {
+  try {
+    const db = await openDB();
+    const transaction = db.transaction(teamStore, "readonly");
+    const store = transaction.objectStore(teamStore);
+
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error("Error loading team from IndexedDB:", error);
+    return [];
+  }
+};
+
+// Function to add or update a single Pokemon in team
+export const savePokemonToTeam = async (pokemon) => {
+  try {
+    const team = await loadTeam();
+
+    // Check if Pokemon already exists in team
+    const existingIndex = team.findIndex((p) => p.id === pokemon.id);
+
+    if (existingIndex >= 0) {
+      // Update existing Pokemon
+      team[existingIndex] = pokemon;
+    } else {
+      // Add new Pokemon (max 6)
+      if (team.length >= 6) {
+        console.warn("Team is full (max 6 Pokemon)");
+        return false;
+      }
+      team.push(pokemon);
+    }
+
+    return await saveTeam(team);
+  } catch (error) {
+    console.error("Error saving Pokemon to team:", error);
+    return false;
+  }
+};
+
+// Function to remove a Pokemon from team
+export const removePokemonFromTeam = async (pokemonId) => {
+  try {
+    const team = await loadTeam();
+    const filteredTeam = team.filter((p) => p.id !== pokemonId);
+    return await saveTeam(filteredTeam);
+  } catch (error) {
+    console.error("Error removing Pokemon from team:", error);
+    return false;
+  }
+};
+
+// Function to clear entire team
+export const clearTeam = async () => {
+  try {
+    const db = await openDB();
+    const transaction = db.transaction(teamStore, "readwrite");
+    const store = transaction.objectStore(teamStore);
+
+    return new Promise((resolve, reject) => {
+      const request = store.clear();
+      request.onsuccess = () => resolve(true);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error("Error clearing team:", error);
+    return false;
+  }
 };

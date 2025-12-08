@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getImageOrPlaceholder } from '../utils/getImageOrPlaceholder';
+import { savePokemonToTeam } from '../utils/indexedDB';
 import customizerStyles from '../styles/PokemonCustomizer.module.css';
 import typeColors from '../utils/typeColors';
 
@@ -23,6 +24,7 @@ const PokemonCustomizer = () => {
     speed: 15
   });
   const [moves, setMoves] = useState([null, null, null, null]);
+  const [errors, setErrors] = useState([]);
 
   // Available moves (placeholder - will fetch from backend later)
   // TODO: Fetch actual Gen 1 moves from backend API
@@ -85,15 +87,43 @@ const PokemonCustomizer = () => {
     const newMoves = [...moves];
     newMoves[slotIndex] = selectedMove;
     setMoves(newMoves);
+    setErrors([]); // Clear errors when user makes changes
   };
 
-  const handleSave = () => {
+  const validateForm = () => {
+    const validationErrors = [];
+
+    // Check if all 4 moves are selected
+    const selectedMoves = moves.filter(m => m !== null);
+    if (selectedMoves.length < 4) {
+      validationErrors.push(`You must select exactly 4 moves (${selectedMoves.length}/4 selected)`);
+    }
+
+    // Check for duplicate moves
+    const moveIds = selectedMoves.map(m => m?.id).filter(id => id);
+    const uniqueMoveIds = new Set(moveIds);
+    if (moveIds.length !== uniqueMoveIds.size) {
+      validationErrors.push('You cannot select the same move twice!');
+    }
+
+    return validationErrors;
+  };
+
+  const handleSave = async () => {
+    // Validate form
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     // Save customized Pokemon and return to team builder
     const customizedPokemon = {
       ...pokemon,
       level,
       dvs,
-      moves: moves.filter(m => m !== null),
+      moves: moves.filter(m => m !== null).map(m => m.name), // Save move names for battle optimizer
+      selectedMoves: moves.filter(m => m !== null), // Keep full move objects for display
       calculatedStats: {
         hp: calculateStat(pokemon.base_stats.hp, dvs.hp, 'hp'),
         attack: calculateStat(pokemon.base_stats.attack, dvs.attack, 'attack'),
@@ -103,9 +133,15 @@ const PokemonCustomizer = () => {
       }
     };
 
-    // TODO: Save to team state (context or localStorage)
-    console.log('Customized Pokemon:', customizedPokemon);
-    navigate('/team-builder');
+    // Save to IndexedDB
+    const success = await savePokemonToTeam(customizedPokemon);
+
+    if (success) {
+      console.log('Pokemon saved to team:', customizedPokemon);
+      navigate('/team-builder');
+    } else {
+      setErrors(['Failed to save Pokemon. Team may be full (max 6 Pokemon).']);
+    }
   };
 
   if (loading) return <div className={customizerStyles.loading}>Loading...</div>;
@@ -132,6 +168,25 @@ const PokemonCustomizer = () => {
           Save & Return
         </button>
       </div>
+
+      {/* Validation Errors */}
+      {errors.length > 0 && (
+        <div style={{
+          background: 'rgba(231, 76, 60, 0.2)',
+          border: '2px solid #e74c3c',
+          borderRadius: '8px',
+          padding: '1rem',
+          margin: '1rem 0',
+          color: '#e74c3c'
+        }}>
+          <strong>⚠️ Please fix these errors:</strong>
+          <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.5rem' }}>
+            {errors.map((error, i) => (
+              <li key={i}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className={customizerStyles.content}>
         {/* Pokemon Display */}
