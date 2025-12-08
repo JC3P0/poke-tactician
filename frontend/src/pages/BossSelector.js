@@ -28,7 +28,7 @@ const BossSelector = () => {
   }, []);
 
   const selectBoss = (bossId) => {
-    navigate('/battle-simulator', {
+    navigate('/battle', {
       state: {
         team,
         bossTrainer: bossId
