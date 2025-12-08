@@ -24,6 +24,7 @@ from typing import List, Optional, Tuple
 import copy
 import sys
 import os
+import random
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -249,7 +250,6 @@ class BattleState:
                     if usable_moves:
                         # Calculate priority for each move (Gen 1 AI algorithm)
                         from utils.typeEffectiveness import TYPE_CHART
-                        import random
 
                         move_priorities = []
                         for m in usable_moves:

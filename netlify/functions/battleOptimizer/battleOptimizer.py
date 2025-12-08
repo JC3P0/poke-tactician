@@ -19,12 +19,21 @@ Date: December 2025
 import json
 import sys
 import os
+import traceback
 from typing import Dict, Any
 
 # Add current directory to path for imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from services.battleOptimizerService import BattleOptimizerService
+# Try to import with error handling
+try:
+    from services.battleOptimizerService import BattleOptimizerService
+    IMPORT_SUCCESS = True
+    IMPORT_ERROR = None
+except Exception as e:
+    IMPORT_SUCCESS = False
+    IMPORT_ERROR = f"Failed to import BattleOptimizerService: {str(e)}\n{traceback.format_exc()}"
+    print(f"[CRITICAL] Import error: {IMPORT_ERROR}")
 
 
 def handler(event, context):
@@ -61,6 +70,11 @@ def handler(event, context):
         }
     }
     """
+
+    # Check if imports succeeded
+    if not IMPORT_SUCCESS:
+        print(f"[ERROR] Handler called but imports failed: {IMPORT_ERROR}")
+        return error_response(f'Import error: {IMPORT_ERROR}', 500)
 
     # Get HTTP method (Lambda Function URL format)
     http_method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')

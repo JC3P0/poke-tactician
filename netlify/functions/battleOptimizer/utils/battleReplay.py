@@ -11,6 +11,7 @@ CS_311 Extra Credit Project
 from typing import List, Dict, Any
 import sys
 import os
+import random
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -128,9 +129,6 @@ def replay_battle(
                 player_pokemon = state.get_active_player_pokemon()
 
                 # Use Gen 1 AI to select move
-                from utils.typeEffectiveness import TYPE_CHART
-                import random
-
                 usable_moves = [m for m in opponent_pokemon.moves if m.is_usable()]
                 if usable_moves:
                     # Calculate priority for each move
