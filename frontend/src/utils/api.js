@@ -51,8 +51,20 @@ export const fetchBossTrainers = async () => {
 
 export const optimizeBattle = async (playerTeam, opponent, algorithm = 'dijkstra', playerLevel = 50) => {
     try {
+        // Map selectedMoves to moves for Lambda function
+        const formattedPlayerTeam = playerTeam.map(pokemon => ({
+            id: pokemon.id,
+            name: pokemon.name,
+            types: pokemon.types,
+            base_stats: pokemon.base_stats,
+            moves: pokemon.selectedMoves || pokemon.moves, // Use selectedMoves if available
+            level: pokemon.level,
+            dvs: pokemon.dvs,
+            calculatedStats: pokemon.calculatedStats
+        }));
+
         const payload = {
-            playerTeam,
+            playerTeam: formattedPlayerTeam,
             algorithm,
             playerLevel
         };

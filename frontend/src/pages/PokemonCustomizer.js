@@ -15,20 +15,42 @@ const PokemonCustomizer = () => {
   const [loading, setLoading] = useState(!location.state?.pokemon);
 
   // Customizable stats (Gen 1)
-  const [level, setLevel] = useState(100);
-  const [dvs, setDvs] = useState({
+  // Initialize from existing Pokemon data if editing from team
+  const [level, setLevel] = useState(pokemon?.level || 100);
+  const [dvs, setDvs] = useState(pokemon?.dvs || {
     hp: 15,
     attack: 15,
     defense: 15,
     special: 15,
     speed: 15
   });
-  const [moves, setMoves] = useState([null, null, null, null]);
+  // If editing from team, pokemon.selectedMoves has the 4 chosen moves
+  // Otherwise, initialize with empty slots
+  const [moves, setMoves] = useState(pokemon?.selectedMoves || [null, null, null, null]);
   const [errors, setErrors] = useState([]);
 
   // Get available moves for THIS specific Pokemon (from MongoDB)
-  // Each Pokemon has their own learnable move list
+  // pokemon.moves contains ALL learnable moves (from MongoDB)
+  // pokemon.selectedMoves contains the 4 chosen moves (if editing)
   const availableMoves = pokemon?.moves || [];
+
+  // Helper function to capitalize move names properly
+  const capitalizeMoves = (moveName) => {
+    if (!moveName) return '';
+    return moveName
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Get available moves for a specific slot (excludes already selected moves)
+  const getAvailableMovesForSlot = (currentSlotIndex) => {
+    const selectedMovesInOtherSlots = moves
+      .map((move, index) => index !== currentSlotIndex ? move : null)
+      .filter(move => move !== null && move !== '');
+
+    return availableMoves.filter(move => !selectedMovesInOtherSlots.includes(move));
+  };
 
   useEffect(() => {
     if (!pokemon) {
@@ -115,7 +137,9 @@ const PokemonCustomizer = () => {
       ...pokemon,
       level,
       dvs,
-      moves: moves.filter(m => m !== null && m !== ''), // Save move names for battle optimizer
+      // Keep original 'moves' array (all available moves from MongoDB)
+      // Store selected moves separately for battle optimizer
+      selectedMoves: moves.filter(m => m !== null && m !== ''),
       calculatedStats: {
         hp: calculateStat(pokemon.base_stats.hp, dvs.hp, 'hp'),
         attack: calculateStat(pokemon.base_stats.attack, dvs.attack, 'attack'),
@@ -262,25 +286,37 @@ const PokemonCustomizer = () => {
 
           {/* Move Selection */}
           <div className={customizerStyles.section}>
-            <h3>Moves (Select up to 4)</h3>
+            <h3>Moves (Select exactly 4 unique moves)</h3>
             <div className={customizerStyles.movesGrid}>
-              {[0, 1, 2, 3].map(index => (
-                <div key={index} className={customizerStyles.moveSlot}>
-                  <label>Move {index + 1}</label>
-                  <select
-                    value={moves[index] || ''}
-                    onChange={(e) => handleMoveSelect(index, e.target.value)}
-                    className={customizerStyles.moveSelect}
-                  >
-                    <option value="">-- Select Move --</option>
-                    {availableMoves.map((moveName, i) => (
-                      <option key={i} value={moveName}>
-                        {moveName.replace(/-/g, ' ')}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
+              {[0, 1, 2, 3].map(index => {
+                const availableMovesForThisSlot = getAvailableMovesForSlot(index);
+                const currentMove = moves[index];
+
+                return (
+                  <div key={index} className={customizerStyles.moveSlot}>
+                    <label>Move {index + 1}</label>
+                    <select
+                      value={currentMove || ''}
+                      onChange={(e) => handleMoveSelect(index, e.target.value)}
+                      className={customizerStyles.moveSelect}
+                    >
+                      <option value="">-- Select Move --</option>
+                      {/* Show currently selected move even if it would be filtered */}
+                      {currentMove && !availableMovesForThisSlot.includes(currentMove) && (
+                        <option value={currentMove}>
+                          {capitalizeMoves(currentMove)}
+                        </option>
+                      )}
+                      {/* Show available moves for this slot */}
+                      {availableMovesForThisSlot.map((moveName, i) => (
+                        <option key={i} value={moveName}>
+                          {capitalizeMoves(moveName)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -65,7 +65,7 @@ const Results = () => {
 
   const downloadResults = () => {
     const data = {
-      team: team.map(p => ({ id: p.id, name: p.name, level: p.level, moves: p.moves })),
+      team: team.map(p => ({ id: p.id, name: p.name, level: p.level, moves: p.selectedMoves })),
       bossTrainer,
       results,
       timestamp: new Date().toISOString()
@@ -86,7 +86,7 @@ const Results = () => {
       <div style={{ padding: '2rem', color: 'white', background: '#2c3e50', minHeight: '100vh' }}>
         <h1>Error: No Battle Data</h1>
         <p>Please start from Team Builder</p>
-        <button onClick={() => navigate('/team-builder')}>ê Back to Team Builder</button>
+        <button onClick={() => navigate('/team-builder')}>ÔøΩ Back to Team Builder</button>
       </div>
     );
   }
@@ -96,9 +96,9 @@ const Results = () => {
       <div style={{ padding: '2rem', color: 'white', background: '#2c3e50', minHeight: '100vh', textAlign: 'center' }}>
         <h1 style={{ color: '#ffcb05', fontSize: '2.5rem', marginBottom: '2rem' }}>Running Battle Simulations...</h1>
         <div style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
-          <div>î Greedy Algorithm (Heap-based)</div>
-          <div>>‡ Dynamic Programming (Hash Table memoization)</div>
-          <div>=˙ Dijkstra's Algorithm (Graph shortest path)</div>
+          <div>ÔøΩ Greedy Algorithm (Heap-based)</div>
+          <div>>ÔøΩ Dynamic Programming (Hash Table memoization)</div>
+          <div>=ÔøΩ Dijkstra's Algorithm (Graph shortest path)</div>
         </div>
         <div style={{ marginTop: '2rem', fontSize: '1rem', opacity: 0.7 }}>
           This may take a few seconds...
@@ -125,7 +125,7 @@ const Results = () => {
             borderRadius: '8px'
           }}
         >
-          ê Back to Boss Selection
+          ÔøΩ Back to Boss Selection
         </button>
 
         <h1 style={{ color: '#ffcb05', fontSize: '2.5rem', margin: 0 }}>
@@ -146,7 +146,7 @@ const Results = () => {
               fontWeight: 'bold'
             }}
           >
-            =Â Download Results (JSON)
+            =ÔøΩ Download Results (JSON)
           </button>
         )}
       </div>
@@ -172,7 +172,7 @@ const Results = () => {
           padding: '1rem',
           marginBottom: '2rem'
         }}>
-          <strong>† Errors:</strong>
+          <strong>ÔøΩ Errors:</strong>
           <ul>
             {errors.map((error, i) => (
               <li key={i}>{error}</li>
@@ -195,9 +195,9 @@ const Results = () => {
             };
 
             const algorithmIcons = {
-              greedy: 'î',
-              dp: '>‡',
-              dijkstra: '=˙'
+              greedy: 'ÔøΩ',
+              dp: '>ÔøΩ',
+              dijkstra: '=ÔøΩ'
             };
 
             return (
