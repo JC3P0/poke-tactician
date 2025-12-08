@@ -150,34 +150,55 @@ class DijkstraBattleOptimizer:
             )
 
         # Run Dijkstra's algorithm to find the best terminal state
-        # Priority:
-        # 1. Shortest path to victory (if possible)
-        # 2. If no victory, longest-lasting path (maximize damage before defeat)
-        best_distance = float('inf')
-        best_path = None
-        best_terminal_vertex = None
-        best_damage = 0
+        # Strategy:
+        # 1. First, look for victory states (shortest path wins)
+        # 2. If no victory possible, find defeat state with maximum damage
+
+        # First pass: Look for victory states
+        victory_path = None
+        victory_distance = float('inf')
+        victory_vertex = None
+
+        # Second pass: Look for best defeat state (max damage)
+        defeat_path = None
+        defeat_damage = 0
+        defeat_vertex = None
 
         for terminal_vertex in terminal_vertices:
             distance, path = graph.dijkstra(initial_vertex_id, terminal_vertex)
-            if distance is not None:
+            if distance is not None and path:
                 state = vertex_to_state.get(terminal_vertex)
-                damage = state.get_total_damage_dealt_to_opponent() if state else 0
+                if not state:
+                    continue
 
-                # Prefer victory states with shortest path
-                if state and state.player_won():
-                    if distance < best_distance:
-                        best_distance = distance
-                        best_path = path
-                        best_terminal_vertex = terminal_vertex
-                        best_damage = damage
-                # If no victory found yet, prefer states with maximum damage
-                elif not best_path or (best_path and not vertex_to_state.get(best_terminal_vertex).player_won()):
-                    if damage > best_damage:
-                        best_distance = distance
-                        best_path = path
-                        best_terminal_vertex = terminal_vertex
-                        best_damage = damage
+                damage = state.get_total_damage_dealt_to_opponent()
+
+                if state.player_won():
+                    # Victory state - prefer shortest path
+                    if distance < victory_distance:
+                        victory_distance = distance
+                        victory_path = path
+                        victory_vertex = terminal_vertex
+                else:
+                    # Defeat state - prefer maximum damage
+                    if damage > defeat_damage:
+                        defeat_damage = damage
+                        defeat_path = path
+                        defeat_vertex = terminal_vertex
+
+        # Choose best result: Victory > Defeat with max damage
+        if victory_path:
+            best_path = victory_path
+            best_terminal_vertex = victory_vertex
+            best_distance = victory_distance
+        elif defeat_path:
+            best_path = defeat_path
+            best_terminal_vertex = defeat_vertex
+            best_distance = 0  # Doesn't matter for defeats
+        else:
+            best_path = None
+            best_terminal_vertex = None
+            best_distance = 0
 
         if best_path is None:
             # No path found (shouldn't happen)
