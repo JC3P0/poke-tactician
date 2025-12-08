@@ -26,14 +26,9 @@ const PokemonCustomizer = () => {
   const [moves, setMoves] = useState([null, null, null, null]);
   const [errors, setErrors] = useState([]);
 
-  // Available moves (placeholder - will fetch from backend later)
-  // TODO: Fetch actual Gen 1 moves from backend API
-  const availableMoves = [
-    { id: 1, name: 'Tackle', type: 'normal', power: 40 },
-    { id: 2, name: 'Thunderbolt', type: 'electric', power: 90 },
-    { id: 3, name: 'Ice Beam', type: 'ice', power: 90 },
-    { id: 4, name: 'Earthquake', type: 'ground', power: 100 },
-  ];
+  // Get available moves for THIS specific Pokemon (from MongoDB)
+  // Each Pokemon has their own learnable move list
+  const availableMoves = pokemon?.moves || [];
 
   useEffect(() => {
     if (!pokemon) {
@@ -82,10 +77,9 @@ const PokemonCustomizer = () => {
     setDvs({ ...dvs, [stat]: numValue });
   };
 
-  const handleMoveSelect = (slotIndex, moveId) => {
-    const selectedMove = availableMoves.find(m => m.id === parseInt(moveId));
+  const handleMoveSelect = (slotIndex, moveName) => {
     const newMoves = [...moves];
-    newMoves[slotIndex] = selectedMove;
+    newMoves[slotIndex] = moveName || null;
     setMoves(newMoves);
     setErrors([]); // Clear errors when user makes changes
   };
@@ -94,15 +88,14 @@ const PokemonCustomizer = () => {
     const validationErrors = [];
 
     // Check if all 4 moves are selected
-    const selectedMoves = moves.filter(m => m !== null);
+    const selectedMoves = moves.filter(m => m !== null && m !== '');
     if (selectedMoves.length < 4) {
       validationErrors.push(`You must select exactly 4 moves (${selectedMoves.length}/4 selected)`);
     }
 
     // Check for duplicate moves
-    const moveIds = selectedMoves.map(m => m?.id).filter(id => id);
-    const uniqueMoveIds = new Set(moveIds);
-    if (moveIds.length !== uniqueMoveIds.size) {
+    const uniqueMoves = new Set(selectedMoves);
+    if (selectedMoves.length !== uniqueMoves.size) {
       validationErrors.push('You cannot select the same move twice!');
     }
 
@@ -122,8 +115,7 @@ const PokemonCustomizer = () => {
       ...pokemon,
       level,
       dvs,
-      moves: moves.filter(m => m !== null).map(m => m.name), // Save move names for battle optimizer
-      selectedMoves: moves.filter(m => m !== null), // Keep full move objects for display
+      moves: moves.filter(m => m !== null && m !== ''), // Save move names for battle optimizer
       calculatedStats: {
         hp: calculateStat(pokemon.base_stats.hp, dvs.hp, 'hp'),
         attack: calculateStat(pokemon.base_stats.attack, dvs.attack, 'attack'),
@@ -276,14 +268,14 @@ const PokemonCustomizer = () => {
                 <div key={index} className={customizerStyles.moveSlot}>
                   <label>Move {index + 1}</label>
                   <select
-                    value={moves[index]?.id || ''}
+                    value={moves[index] || ''}
                     onChange={(e) => handleMoveSelect(index, e.target.value)}
                     className={customizerStyles.moveSelect}
                   >
                     <option value="">-- Select Move --</option>
-                    {availableMoves.map(move => (
-                      <option key={move.id} value={move.id}>
-                        {move.name} ({move.type}, {move.power} power)
+                    {availableMoves.map((moveName, i) => (
+                      <option key={i} value={moveName}>
+                        {moveName.replace(/-/g, ' ')}
                       </option>
                     ))}
                   </select>
