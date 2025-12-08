@@ -51,8 +51,8 @@ class BattleOptimizerService:
         algorithm: str = "dijkstra",
         player_level: int = 50,
         max_turns: int = 100,
-        max_depth: int = 50,
-        max_states: int = 100000  # Increased from 500 to 100k for complex battles
+        max_depth: int = 100,  # Increased from 50 to 100 for longer battles
+        max_states: int = 500000  # Increased from 100k to 500k for complex 6v6 battles
     ) -> Dict[str, Any]:
         """
         Optimize a Pokemon battle using the specified algorithm.
@@ -100,16 +100,20 @@ class BattleOptimizerService:
         else:
             raise ValueError("Must provide either opponent_team_data or boss_trainer_id")
 
+        # Create initial battle state for replay
+        from models.battleState import BattleState
+        initial_state = BattleState(player_team, opponent_team)
+
         # Run the selected algorithm
         if algorithm == "greedy":
             result = run_greedy_optimizer(player_team, opponent_team, max_turns=max_turns)
-            formatted_result = BattleOptimizerService._format_greedy_result(result)
+            formatted_result = BattleOptimizerService._format_greedy_result(result, initial_state)
         elif algorithm == "dp":
             result = run_dp_optimizer(player_team, opponent_team, max_depth=max_depth)
-            formatted_result = BattleOptimizerService._format_dp_result(result)
+            formatted_result = BattleOptimizerService._format_dp_result(result, initial_state)
         else:  # dijkstra
             result = run_dijkstra_optimizer(player_team, opponent_team, max_states=max_states)
-            formatted_result = BattleOptimizerService._format_dijkstra_result(result)
+            formatted_result = BattleOptimizerService._format_dijkstra_result(result, initial_state)
 
         # Add metadata
         formatted_result["algorithm"] = algorithm
@@ -131,9 +135,9 @@ class BattleOptimizerService:
         return formatted_result
 
     @staticmethod
-    def _format_greedy_result(result: GreedyResult) -> Dict[str, Any]:
+    def _format_greedy_result(result: GreedyResult, initial_state=None) -> Dict[str, Any]:
         """Format Greedy algorithm result for API response."""
-        return {
+        formatted = {
             "success": result.success,
             "totalDamage": result.total_damage,
             "turns": result.turns,
@@ -141,10 +145,17 @@ class BattleOptimizerService:
             "victory": result.success
         }
 
+        # Add detailed battle log
+        if initial_state and result.move_sequence:
+            from utils.battleReplay import replay_battle
+            formatted["battleLog"] = replay_battle(initial_state, result.move_sequence)
+
+        return formatted
+
     @staticmethod
-    def _format_dp_result(result: DPResult) -> Dict[str, Any]:
+    def _format_dp_result(result: DPResult, initial_state=None) -> Dict[str, Any]:
         """Format DP algorithm result for API response."""
-        return {
+        formatted = {
             "success": result.success,
             "totalDamage": result.total_damage,
             "turns": result.turns,
@@ -156,10 +167,17 @@ class BattleOptimizerService:
             "statesExplored": result.states_explored
         }
 
+        # Add detailed battle log
+        if initial_state and result.move_sequence:
+            from utils.battleReplay import replay_battle
+            formatted["battleLog"] = replay_battle(initial_state, result.move_sequence)
+
+        return formatted
+
     @staticmethod
-    def _format_dijkstra_result(result: DijkstraResult) -> Dict[str, Any]:
+    def _format_dijkstra_result(result: DijkstraResult, initial_state=None) -> Dict[str, Any]:
         """Format Dijkstra algorithm result for API response."""
-        return {
+        formatted = {
             "success": result.success,
             "totalDamage": result.total_damage,
             "turns": result.turns,
@@ -168,6 +186,13 @@ class BattleOptimizerService:
             "statesExplored": result.states_explored,
             "pathCost": result.path_cost
         }
+
+        # Add detailed battle log
+        if initial_state and result.move_sequence:
+            from utils.battleReplay import replay_battle
+            formatted["battleLog"] = replay_battle(initial_state, result.move_sequence)
+
+        return formatted
 
     @staticmethod
     def get_boss_trainers() -> Dict[str, Any]:

@@ -237,6 +237,56 @@ class BattleState:
             if defender.is_fainted():
                 next_state._auto_switch_opponent()
 
+            # OPPONENT COUNTERATTACK (Gen 1: both attack in same turn based on Speed)
+            # Only counter if battle isn't over and opponent is still alive
+            elif not next_state.is_battle_over():
+                opponent_attacker = next_state.get_active_opponent_pokemon()
+                player_defender = next_state.get_active_player_pokemon()
+
+                # Gen 1 Trainer AI: Priority-based move selection with type effectiveness
+                if opponent_attacker.moves:
+                    usable_moves = [m for m in opponent_attacker.moves if m.is_usable()]
+                    if usable_moves:
+                        # Calculate priority for each move (Gen 1 AI algorithm)
+                        from utils.typeEffectiveness import TYPE_CHART
+                        import random
+
+                        move_priorities = []
+                        for m in usable_moves:
+                            priority = 10  # Base priority
+
+                            # Check type effectiveness
+                            effectiveness = TYPE_CHART.get_multiplier_dual_type(
+                                m.type,
+                                player_defender.types[0],
+                                player_defender.types[1] if len(player_defender.types) > 1 else player_defender.types[0]
+                            )
+
+                            # Adjust priority based on effectiveness
+                            if effectiveness > 1.0:  # Super effective
+                                priority -= 1  # Favor this move
+                            elif effectiveness < 1.0:  # Not very effective
+                                priority += 1  # Avoid this move
+
+                            move_priorities.append((m, priority))
+
+                        # Find minimum priority (best moves)
+                        min_priority = min(p for _, p in move_priorities)
+                        best_moves = [m for m, p in move_priorities if p == min_priority]
+
+                        # Randomly select from best moves (Gen 1 behavior)
+                        best_move = random.choice(best_moves)
+
+                        counter_damage = DamageCalculator.calculate_damage(
+                            opponent_attacker, player_defender, best_move
+                        )
+                        player_defender.take_damage(counter_damage)
+                        best_move.use()
+
+                        # If player Pokemon fainted, switch to next available
+                        if player_defender.is_fainted():
+                            next_state._auto_switch_player()
+
             # Increment turn
             next_state.turn += 1
 
@@ -261,6 +311,20 @@ class BattleState:
 
         # If no alive Pokemon found, battle is over
         # (opponent_active stays on fainted Pokemon)
+
+    def _auto_switch_player(self):
+        """
+        Automatically switch player to next alive Pokemon.
+
+        Called when active player Pokemon faints.
+        """
+        for i, pokemon in enumerate(self.player_team):
+            if not pokemon.is_fainted() and i != self.player_active:
+                self.player_active = i
+                return
+
+        # If no alive Pokemon found, battle is over
+        # (player_active stays on fainted Pokemon)
 
     def get_total_damage_dealt_to_opponent(self) -> int:
         """

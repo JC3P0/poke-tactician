@@ -218,12 +218,16 @@ class DijkstraBattleOptimizer:
         else:
             logger.warning(f"[DIJKSTRA] No defeat path found even though {defeat_count} defeat states exist!")
 
-        # Choose best result: Victory > Defeat with max damage
+        # Choose best result: ONLY accept victory, never accept defeat!
+        # (Defeat states are only used if NO victory is possible)
         if victory_path:
             best_path = victory_path
             best_terminal_vertex = victory_vertex
             best_distance = victory_distance
+            logger.info(f"[DIJKSTRA] Found victory path! Distance: {victory_distance}, damage: {vertex_to_state.get(victory_vertex).get_total_damage_dealt_to_opponent()}")
         elif defeat_path:
+            # Only use defeat path if no victory found (player too weak)
+            logger.warning(f"[DIJKSTRA] No victory possible - using best defeat path with {defeat_damage} damage")
             best_path = defeat_path
             best_terminal_vertex = defeat_vertex
             best_distance = 0  # Doesn't matter for defeats
