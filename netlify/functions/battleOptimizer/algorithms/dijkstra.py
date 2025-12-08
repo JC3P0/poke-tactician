@@ -133,13 +133,23 @@ class DijkstraBattleOptimizer:
 
         # Find all terminal states (battle over - victory OR defeat)
         terminal_vertices = []
+        victory_count = 0
+        defeat_count = 0
+
         for vertex_id in range(graph.get_num_verts()):
             state = vertex_to_state.get(vertex_id)
             if state and state.is_battle_over():
                 terminal_vertices.append(vertex_id)
+                if state.player_won():
+                    victory_count += 1
+                else:
+                    defeat_count += 1
+
+        print(f"[DEBUG] Found {len(terminal_vertices)} terminal states: {victory_count} victories, {defeat_count} defeats")
 
         if not terminal_vertices:
             # No terminal state found (shouldn't happen if we explored properly)
+            print(f"[DEBUG] No terminal states found after exploring {graph.get_num_verts()} states!")
             return DijkstraResult(
                 success=False,
                 total_damage=0,
@@ -164,9 +174,13 @@ class DijkstraBattleOptimizer:
         defeat_damage = 0
         defeat_vertex = None
 
+        paths_found = 0
+        paths_not_found = 0
+
         for terminal_vertex in terminal_vertices:
             distance, path = graph.dijkstra(initial_vertex_id, terminal_vertex)
             if distance is not None and path:
+                paths_found += 1
                 state = vertex_to_state.get(terminal_vertex)
                 if not state:
                     continue
@@ -185,6 +199,13 @@ class DijkstraBattleOptimizer:
                         defeat_damage = damage
                         defeat_path = path
                         defeat_vertex = terminal_vertex
+            else:
+                paths_not_found += 1
+
+        print(f"[DEBUG] Paths found: {paths_found}, Paths not found: {paths_not_found}")
+        print(f"[DEBUG] Best victory path: {victory_path is not None}, Best defeat path: {defeat_path is not None}")
+        if defeat_path:
+            print(f"[DEBUG] Defeat path damage: {defeat_damage}, path length: {len(defeat_path)}")
 
         # Choose best result: Victory > Defeat with max damage
         if victory_path:
