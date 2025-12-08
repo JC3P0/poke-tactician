@@ -131,15 +131,15 @@ class DijkstraBattleOptimizer:
         # Find initial vertex (should be vertex 0)
         initial_vertex_id = 0
 
-        # Find all victory states
-        victory_vertices = []
+        # Find all terminal states (battle over - victory OR defeat)
+        terminal_vertices = []
         for vertex_id in range(graph.get_num_verts()):
             state = vertex_to_state.get(vertex_id)
-            if state and state.player_won():
-                victory_vertices.append(vertex_id)
+            if state and state.is_battle_over():
+                terminal_vertices.append(vertex_id)
 
-        if not victory_vertices:
-            # No victory state found
+        if not terminal_vertices:
+            # No terminal state found (shouldn't happen if we explored properly)
             return DijkstraResult(
                 success=False,
                 total_damage=0,
@@ -149,20 +149,38 @@ class DijkstraBattleOptimizer:
                 states_explored=graph.get_num_verts()
             )
 
-        # Run Dijkstra's algorithm to each victory state and find the shortest (Assignment 9!)
+        # Run Dijkstra's algorithm to find the best terminal state
+        # Priority:
+        # 1. Shortest path to victory (if possible)
+        # 2. If no victory, longest-lasting path (maximize damage before defeat)
         best_distance = float('inf')
         best_path = None
-        best_victory_vertex = None
+        best_terminal_vertex = None
+        best_damage = 0
 
-        for victory_vertex in victory_vertices:
-            distance, path = graph.dijkstra(initial_vertex_id, victory_vertex)
-            if distance is not None and distance < best_distance:
-                best_distance = distance
-                best_path = path
-                best_victory_vertex = victory_vertex
+        for terminal_vertex in terminal_vertices:
+            distance, path = graph.dijkstra(initial_vertex_id, terminal_vertex)
+            if distance is not None:
+                state = vertex_to_state.get(terminal_vertex)
+                damage = state.get_total_damage_dealt_to_opponent() if state else 0
+
+                # Prefer victory states with shortest path
+                if state and state.player_won():
+                    if distance < best_distance:
+                        best_distance = distance
+                        best_path = path
+                        best_terminal_vertex = terminal_vertex
+                        best_damage = damage
+                # If no victory found yet, prefer states with maximum damage
+                elif not best_path or (best_path and not vertex_to_state.get(best_terminal_vertex).player_won()):
+                    if damage > best_damage:
+                        best_distance = distance
+                        best_path = path
+                        best_terminal_vertex = terminal_vertex
+                        best_damage = damage
 
         if best_path is None:
-            # No path to victory found
+            # No path found (shouldn't happen)
             return DijkstraResult(
                 success=False,
                 total_damage=0,
@@ -185,7 +203,7 @@ class DijkstraBattleOptimizer:
                 move_sequence.append(move_name)
 
         # Get final state
-        final_state = vertex_to_state.get(best_victory_vertex, initial_state)
+        final_state = vertex_to_state.get(best_terminal_vertex, initial_state)
 
         # Calculate statistics
         success = final_state.player_won()
