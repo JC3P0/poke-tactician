@@ -429,8 +429,10 @@ class DijkstraBattleOptimizer:
         player_after = after_state.get_active_player_pokemon()
         opponent_after = after_state.get_active_opponent_pokemon()
 
+        # Check if opponent Pokemon changed (fainted and switched)
+        opponent_changed = (before_state.opponent_active != after_state.opponent_active)
+
         # Log player's attack
-        opponent_damage = opponent_before.current_hp - opponent_after.current_hp
         player_move = player_before.get_move(player_move_name)
 
         if player_move:
@@ -439,6 +441,14 @@ class DijkstraBattleOptimizer:
                 opponent_before.types[0],
                 opponent_before.types[1] if len(opponent_before.types) > 1 else opponent_before.types[0]
             )
+
+            # If opponent changed, they fainted - show HP going to 0
+            if opponent_changed:
+                final_hp = 0
+                damage = opponent_before.current_hp
+            else:
+                final_hp = opponent_after.current_hp
+                damage = opponent_before.current_hp - opponent_after.current_hp
 
             battle_log.append({
                 "turn": turn_num,
@@ -451,16 +461,16 @@ class DijkstraBattleOptimizer:
                 "defender": {
                     "name": opponent_before.name,
                     "hpBefore": opponent_before.current_hp,
-                    "hpAfter": opponent_after.current_hp,
+                    "hpAfter": final_hp,
                     "maxHp": opponent_before.max_hp
                 },
                 "move": player_move_name,
-                "damage": opponent_damage,
+                "damage": damage,
                 "effectiveness": effectiveness
             })
 
-        # Check if opponent fainted
-        if opponent_after.is_fainted() and not opponent_before.is_fainted():
+        # If opponent changed, log faint and switch
+        if opponent_changed:
             battle_log.append({
                 "turn": turn_num,
                 "event": "faint",
@@ -470,20 +480,18 @@ class DijkstraBattleOptimizer:
                 }
             })
 
-            # Check if opponent switched to new Pokemon
-            if after_state.opponent_active != before_state.opponent_active:
-                new_opponent = after_state.get_active_opponent_pokemon()
-                if not new_opponent.is_fainted():
-                    battle_log.append({
-                        "turn": turn_num,
-                        "event": "switch",
-                        "pokemon": {
-                            "name": new_opponent.name,
-                            "hp": new_opponent.current_hp,
-                            "maxHp": new_opponent.max_hp,
-                            "team": "opponent"
-                        }
-                    })
+            # Log switch to new Pokemon
+            if not opponent_after.is_fainted():
+                battle_log.append({
+                    "turn": turn_num,
+                    "event": "switch",
+                    "pokemon": {
+                        "name": opponent_after.name,
+                        "hp": opponent_after.current_hp,
+                        "maxHp": opponent_after.max_hp,
+                        "team": "opponent"
+                    }
+                })
 
         # Check if player Pokemon changed (switched)
         if after_state.player_active != before_state.player_active:
