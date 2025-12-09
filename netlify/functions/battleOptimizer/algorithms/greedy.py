@@ -360,28 +360,29 @@ class GreedyBattleOptimizer:
                         }
                     })
         else:
-            # Player didn't switch - check if they took damage from counterattack
-            if player_before.name == player_after.name:
+            # Player didn't switch - check if opponent counterattacked
+            # Log counterattacks even if they deal 0 damage (status moves, immunities, etc.)
+            if player_before.name == player_after.name and not opponent_changed:
                 player_damage = player_before.current_hp - player_after.current_hp
-                if player_damage > 0:
-                    battle_log.append({
-                        "turn": turn_num,
-                        "event": "opponent_attack",
-                        "attacker": {
-                            "name": opponent_after.name,
-                            "hp": opponent_after.current_hp,
-                            "maxHp": opponent_after.max_hp
-                        },
-                        "defender": {
-                            "name": player_before.name,
-                            "hpBefore": player_before.current_hp,
-                            "hpAfter": player_after.current_hp,
-                            "maxHp": player_before.max_hp
-                        },
-                        "move": "Counter",
-                        "damage": player_damage,
-                        "effectiveness": 1.0
-                    })
+                # Always log opponent attack (even 0 damage for status moves)
+                battle_log.append({
+                    "turn": turn_num,
+                    "event": "opponent_attack",
+                    "attacker": {
+                        "name": opponent_after.name,
+                        "hp": opponent_after.current_hp,
+                        "maxHp": opponent_after.max_hp
+                    },
+                    "defender": {
+                        "name": player_before.name,
+                        "hpBefore": player_before.current_hp,
+                        "hpAfter": player_after.current_hp,
+                        "maxHp": player_before.max_hp
+                    },
+                    "move": "Counter",
+                    "damage": player_damage,
+                    "effectiveness": 1.0
+                })
 
 
 def run_greedy_optimizer(
