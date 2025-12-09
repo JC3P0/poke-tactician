@@ -37,14 +37,14 @@ class BattleEvent:
 
 def replay_battle(
     initial_state: BattleState,
-    move_sequence: List[str]
+    move_sequence: List[tuple[int, str]]
 ) -> tuple[List[Dict[str, Any]], BattleState]:
     """
     Replay a battle with detailed logging.
 
     Args:
         initial_state: Starting battle state
-        move_sequence: List of move names to execute
+        move_sequence: List of (pokemon_index, move_name) tuples
 
     Returns:
         Tuple of (battle_log, final_state)
@@ -54,7 +54,26 @@ def replay_battle(
     battle_log = []
     state = initial_state.copy()
 
-    for turn_num, move_name in enumerate(move_sequence, 1):
+    for turn_num, move_info in enumerate(move_sequence, 1):
+        # Unpack Pokemon index and move name
+        pokemon_index, move_name = move_info
+
+        # Switch to correct Pokemon if needed
+        if state.player_active != pokemon_index:
+            # Log the switch
+            new_pokemon = state.player_team[pokemon_index]
+            battle_log.append({
+                "turn": turn_num,
+                "event": "switch",
+                "pokemon": {
+                    "name": new_pokemon.name,
+                    "hp": new_pokemon.current_hp,
+                    "maxHp": new_pokemon.max_hp,
+                    "team": "player"
+                }
+            })
+            state.player_active = pokemon_index
+
         # Get active Pokemon
         player_pokemon = state.get_active_player_pokemon()
         opponent_pokemon = state.get_active_opponent_pokemon()

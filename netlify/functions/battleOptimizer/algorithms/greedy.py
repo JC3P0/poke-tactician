@@ -122,18 +122,20 @@ class GreedyBattleOptimizer:
                 # No valid moves available (shouldn't happen)
                 break
 
-            # Record the move
-            move_sequence.append(best_move_name)
-
             # Apply the move (generate successor state)
             successors = current_state.generate_successor_states()
 
             # Find the successor that used our selected move
             next_state = None
-            for state, move, damage in successors:
+            pokemon_index = None
+            for state, move, damage, poke_idx in successors:
                 if move.name == best_move_name:
                     next_state = state
+                    pokemon_index = poke_idx
                     break
+
+            # Record the move with Pokemon index
+            move_sequence.append((pokemon_index, best_move_name))
 
             if next_state is None:
                 # Move not found (shouldn't happen)

@@ -249,15 +249,15 @@ class DijkstraBattleOptimizer:
 
         path = best_path
 
-        # Extract move sequence from path
+        # Extract move sequence from path (with Pokemon indices)
         move_sequence = []
         for i in range(len(path) - 1):
             from_vertex = path[i]
             to_vertex = path[i + 1]
             edge_key = (from_vertex, to_vertex)
-            move_name = move_labels.get(edge_key)
-            if move_name:
-                move_sequence.append(move_name)
+            move_info = move_labels.get(edge_key)  # (pokemon_index, move_name) tuple
+            if move_info:
+                move_sequence.append(move_info)
 
         # Get final state
         final_state = vertex_to_state.get(best_terminal_vertex, initial_state)
@@ -327,7 +327,7 @@ class DijkstraBattleOptimizer:
             # Generate successors
             successors = current_state.generate_successor_states()
 
-            for next_state, move, damage in successors:
+            for next_state, move, damage, pokemon_index in successors:
                 next_hash = next_state.hash_key()
 
                 # Add vertex if not seen
@@ -355,8 +355,8 @@ class DijkstraBattleOptimizer:
                     weight=weight
                 )
 
-                # Record move label
-                move_labels[(current_vertex_id, next_vertex_id)] = move.name
+                # Record move label WITH Pokemon index
+                move_labels[(current_vertex_id, next_vertex_id)] = (pokemon_index, move.name)
 
         return graph, state_to_vertex, vertex_to_state, move_labels
 

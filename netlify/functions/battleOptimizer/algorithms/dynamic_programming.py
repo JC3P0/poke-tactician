@@ -145,15 +145,18 @@ class DynamicProgrammingOptimizer:
             if best_move is None:
                 break
 
-            move_sequence.append(best_move)
-
             # Apply the move
             successors = current_state.generate_successor_states()
             next_state = None
-            for state, move, damage in successors:
+            pokemon_index = None
+            for state, move, damage, poke_idx in successors:
                 if move.name == best_move:
                     next_state = state
+                    pokemon_index = poke_idx
                     break
+
+            # Record move with Pokemon index
+            move_sequence.append((pokemon_index, best_move))
 
             if next_state is None:
                 break
@@ -256,7 +259,7 @@ class DynamicProgrammingOptimizer:
         best_total_damage = -1.0
         best_move_name = None
 
-        for next_state, move, immediate_damage in successors:
+        for next_state, move, immediate_damage, poke_idx in successors:
             # Recursive call to get optimal damage from next state
             future_damage, _ = self._compute_optimal(next_state, depth + 1)
 
