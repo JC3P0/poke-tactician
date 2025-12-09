@@ -226,8 +226,13 @@ class BattleState:
             # Import here to avoid circular dependency
             from utils.damageCalculator import DamageCalculator
 
-            # Calculate damage
-            damage = DamageCalculator.calculate_damage(attacker, defender, move)
+            # Calculate damage (DETERMINISTIC: no crits, average damage roll)
+            # This ensures algorithm execution and replay produce identical results
+            damage = DamageCalculator.calculate_damage(
+                attacker, defender, move,
+                is_critical=False,  # No critical hits for consistency
+                random_roll=236  # Average of 217-255 for deterministic damage
+            )
 
             # OPTIMIZATION: Skip immune moves (0 damage) to reduce graph size
             if damage == 0:
@@ -284,7 +289,9 @@ class BattleState:
                         best_move = max(best_moves, key=lambda m: m.power)
 
                         counter_damage = DamageCalculator.calculate_damage(
-                            opponent_attacker, player_defender, best_move
+                            opponent_attacker, player_defender, best_move,
+                            is_critical=False,  # No critical hits for consistency
+                            random_roll=236  # Average of 217-255 for deterministic damage
                         )
                         player_defender.take_damage(counter_damage)
                         best_move.use()

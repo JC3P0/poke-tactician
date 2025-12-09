@@ -44,6 +44,7 @@ class GreedyResult:
         turns: Number of turns taken
         move_sequence: List of moves used (in order)
         final_state: Final battle state
+        battle_log: Detailed turn-by-turn battle events
     """
 
     def __init__(
@@ -52,13 +53,15 @@ class GreedyResult:
         total_damage: int,
         turns: int,
         move_sequence: List[str],
-        final_state: BattleState
+        final_state: BattleState,
+        battle_log: List = None
     ):
         self.success = success
         self.total_damage = total_damage
         self.turns = turns
         self.move_sequence = move_sequence
         self.final_state = final_state
+        self.battle_log = battle_log or []
 
     def __repr__(self) -> str:
         return (f"GreedyResult(success={self.success}, "
@@ -112,6 +115,7 @@ class GreedyBattleOptimizer:
         """
         current_state = initial_state.copy()
         move_sequence = []
+        battle_log = []
         turns = 0
 
         while not current_state.is_battle_over() and turns < self.max_turns:
@@ -139,6 +143,9 @@ class GreedyBattleOptimizer:
                 # Move not found (shouldn't happen)
                 break
 
+            # Extract battle events by comparing current_state to next_state
+            self._log_battle_events(current_state, next_state, best_move_name, turns + 1, battle_log)
+
             # Move to next state
             current_state = next_state
             turns += 1
@@ -147,12 +154,21 @@ class GreedyBattleOptimizer:
         success = current_state.player_won()
         total_damage = current_state.get_total_damage_dealt_to_opponent()
 
+        # Add final battle result to log
+        if current_state.is_battle_over():
+            battle_log.append({
+                "turn": turns,
+                "event": "battle_end",
+                "winner": "player" if current_state.player_won() else "opponent"
+            })
+
         return GreedyResult(
             success=success,
             total_damage=total_damage,
             turns=turns,
             move_sequence=move_sequence,
-            final_state=current_state
+            final_state=current_state,
+            battle_log=battle_log
         )
 
     def _select_best_move(self, state: BattleState) -> Optional[str]:
@@ -201,6 +217,139 @@ class GreedyBattleOptimizer:
         damage, move_name = max_item
 
         return move_name
+
+    def _log_battle_events(
+        self,
+        before_state: BattleState,
+        after_state: BattleState,
+        player_move_name: str,
+        turn_num: int,
+        battle_log: List
+    ):
+        """
+        Extract battle events by comparing before and after states.
+
+        Args:
+            before_state: State before the turn
+            after_state: State after the turn
+            player_move_name: Move used by player
+            turn_num: Current turn number
+            battle_log: List to append events to
+        """
+        from utils.typeEffectiveness import TYPE_CHART
+
+        # Get Pokemon before and after
+        player_before = before_state.get_active_player_pokemon()
+        opponent_before = before_state.get_active_opponent_pokemon()
+        player_after = after_state.get_active_player_pokemon()
+        opponent_after = after_state.get_active_opponent_pokemon()
+
+        # Log player's attack
+        opponent_damage = opponent_before.current_hp - opponent_after.current_hp
+        player_move = player_before.get_move(player_move_name)
+
+        if player_move:
+            effectiveness = TYPE_CHART.get_multiplier_dual_type(
+                player_move.type,
+                opponent_before.types[0],
+                opponent_before.types[1] if len(opponent_before.types) > 1 else opponent_before.types[0]
+            )
+
+            battle_log.append({
+                "turn": turn_num,
+                "event": "player_attack",
+                "attacker": {
+                    "name": player_before.name,
+                    "hp": player_before.current_hp,
+                    "maxHp": player_before.max_hp
+                },
+                "defender": {
+                    "name": opponent_before.name,
+                    "hpBefore": opponent_before.current_hp,
+                    "hpAfter": opponent_after.current_hp,
+                    "maxHp": opponent_before.max_hp
+                },
+                "move": player_move_name,
+                "damage": opponent_damage,
+                "effectiveness": effectiveness
+            })
+
+        # Check if opponent fainted
+        if opponent_after.is_fainted() and not opponent_before.is_fainted():
+            battle_log.append({
+                "turn": turn_num,
+                "event": "faint",
+                "pokemon": {
+                    "name": opponent_before.name,
+                    "team": "opponent"
+                }
+            })
+
+            # Check if opponent switched to new Pokemon
+            if after_state.opponent_active != before_state.opponent_active:
+                new_opponent = after_state.get_active_opponent_pokemon()
+                if not new_opponent.is_fainted():
+                    battle_log.append({
+                        "turn": turn_num,
+                        "event": "switch",
+                        "pokemon": {
+                            "name": new_opponent.name,
+                            "hp": new_opponent.current_hp,
+                            "maxHp": new_opponent.max_hp,
+                            "team": "opponent"
+                        }
+                    })
+
+        # Log opponent's counterattack (if player took damage and didn't switch)
+        if player_before.name == player_after.name:
+            player_damage = player_before.current_hp - player_after.current_hp
+            if player_damage > 0:
+                # Try to determine which move opponent used
+                # We'll log it as opponent_attack
+                battle_log.append({
+                    "turn": turn_num,
+                    "event": "opponent_attack",
+                    "attacker": {
+                        "name": opponent_after.name,
+                        "hp": opponent_after.current_hp,
+                        "maxHp": opponent_after.max_hp
+                    },
+                    "defender": {
+                        "name": player_before.name,
+                        "hpBefore": player_before.current_hp,
+                        "hpAfter": player_after.current_hp,
+                        "maxHp": player_before.max_hp
+                    },
+                    "move": "Counter",  # Generic name since we don't track opponent move
+                    "damage": player_damage,
+                    "effectiveness": 1.0  # We don't know exact effectiveness
+                })
+
+        # Check if player fainted
+        if player_after.is_fainted() and not player_before.is_fainted():
+            battle_log.append({
+                "turn": turn_num,
+                "event": "faint",
+                "pokemon": {
+                    "name": player_before.name,
+                    "team": "player"
+                }
+            })
+
+            # Check if player switched to new Pokemon
+            if after_state.player_active != before_state.player_active:
+                new_player = after_state.get_active_player_pokemon()
+                if not new_player.is_fainted():
+                    battle_log.append({
+                        "turn": turn_num,
+                        "event": "switch",
+                        "pokemon": {
+                            "name": new_player.name,
+                            "hp": new_player.current_hp,
+                            "maxHp": new_player.max_hp,
+                            "team": "player"
+                        }
+                    })
 
 
 def run_greedy_optimizer(

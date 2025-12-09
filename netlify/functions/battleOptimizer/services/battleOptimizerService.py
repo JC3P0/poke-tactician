@@ -137,94 +137,47 @@ class BattleOptimizerService:
     @staticmethod
     def _format_greedy_result(result: GreedyResult, initial_state=None) -> Dict[str, Any]:
         """Format Greedy algorithm result for API response."""
-        # Add detailed battle log and get ACTUAL victory status
-        actual_victory = result.success
-        if initial_state and result.move_sequence:
-            from utils.battleReplay import replay_battle
-            battle_log, final_state = replay_battle(initial_state, result.move_sequence)
-            formatted = {
-                "success": final_state.player_won(),  # Use ACTUAL result from replay
-                "totalDamage": final_state.get_total_damage_dealt_to_opponent(),
-                "turns": result.turns,
-                "moveSequence": result.move_sequence,
-                "victory": final_state.player_won(),  # Use ACTUAL victory status
-                "battleLog": battle_log
-            }
-        else:
-            # No replay available, use algorithm's claim
-            formatted = {
-                "success": result.success,
-                "totalDamage": result.total_damage,
-                "turns": result.turns,
-                "moveSequence": result.move_sequence,
-                "victory": result.success
-            }
-
-        return formatted
+        # Use battle log from algorithm execution (no replay needed!)
+        return {
+            "success": result.success,
+            "totalDamage": result.total_damage,
+            "turns": result.turns,
+            "moveSequence": result.move_sequence,
+            "victory": result.success,
+            "battleLog": result.battle_log
+        }
 
     @staticmethod
     def _format_dp_result(result: DPResult, initial_state=None) -> Dict[str, Any]:
         """Format DP algorithm result for API response."""
-        # Add detailed battle log and get ACTUAL victory status
-        if initial_state and result.move_sequence:
-            from utils.battleReplay import replay_battle
-            battle_log, final_state = replay_battle(initial_state, result.move_sequence)
-            formatted = {
-                "success": final_state.player_won(),
-                "totalDamage": final_state.get_total_damage_dealt_to_opponent(),
-                "turns": result.turns,
-                "moveSequence": result.move_sequence,
-                "victory": final_state.player_won(),
-                "cacheHits": result.cache_hits,
-                "cacheMisses": result.cache_misses,
-                "cacheHitRate": result.get_cache_hit_rate(),
-                "statesExplored": result.states_explored,
-                "battleLog": battle_log
-            }
-        else:
-            formatted = {
-                "success": result.success,
-                "totalDamage": result.total_damage,
-                "turns": result.turns,
-                "moveSequence": result.move_sequence,
-                "victory": result.success,
-                "cacheHits": result.cache_hits,
-                "cacheMisses": result.cache_misses,
-                "cacheHitRate": result.get_cache_hit_rate(),
-                "statesExplored": result.states_explored
-            }
-
-        return formatted
+        # Use battle log from algorithm execution (no replay needed!)
+        return {
+            "success": result.success,
+            "totalDamage": result.total_damage,
+            "turns": result.turns,
+            "moveSequence": result.move_sequence,
+            "victory": result.success,
+            "cacheHits": result.cache_hits,
+            "cacheMisses": result.cache_misses,
+            "cacheHitRate": result.get_cache_hit_rate(),
+            "statesExplored": result.states_explored,
+            "battleLog": result.battle_log
+        }
 
     @staticmethod
     def _format_dijkstra_result(result: DijkstraResult, initial_state=None) -> Dict[str, Any]:
         """Format Dijkstra algorithm result for API response."""
-        # Add detailed battle log and get ACTUAL victory status
-        if initial_state and result.move_sequence:
-            from utils.battleReplay import replay_battle
-            battle_log, final_state = replay_battle(initial_state, result.move_sequence)
-            formatted = {
-                "success": final_state.player_won(),
-                "totalDamage": final_state.get_total_damage_dealt_to_opponent(),
-                "turns": result.turns,
-                "moveSequence": result.move_sequence,
-                "victory": final_state.player_won(),
-                "statesExplored": result.states_explored,
-                "pathCost": result.path_cost,
-                "battleLog": battle_log
-            }
-        else:
-            formatted = {
-                "success": result.success,
-                "totalDamage": result.total_damage,
-                "turns": result.turns,
-                "moveSequence": result.move_sequence,
-                "victory": result.success,
-                "statesExplored": result.states_explored,
-                "pathCost": result.path_cost
-            }
-
-        return formatted
+        # Use battle log from algorithm execution (no replay needed!)
+        return {
+            "success": result.success,
+            "totalDamage": result.total_damage,
+            "turns": result.turns,
+            "moveSequence": result.move_sequence,
+            "victory": result.success,
+            "statesExplored": result.states_explored,
+            "pathCost": result.path_cost,
+            "battleLog": result.battle_log
+        }
 
     @staticmethod
     def get_boss_trainers() -> Dict[str, Any]:

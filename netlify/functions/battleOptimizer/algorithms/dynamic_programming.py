@@ -56,7 +56,8 @@ class DPResult:
         final_state: BattleState,
         cache_hits: int = 0,
         cache_misses: int = 0,
-        states_explored: int = 0
+        states_explored: int = 0,
+        battle_log: List = None
     ):
         self.success = success
         self.total_damage = total_damage
@@ -66,6 +67,7 @@ class DPResult:
         self.cache_hits = cache_hits
         self.cache_misses = cache_misses
         self.states_explored = states_explored
+        self.battle_log = battle_log or []
 
     def get_cache_hit_rate(self) -> float:
         """Calculate cache hit rate (0-1)."""
@@ -135,6 +137,7 @@ class DynamicProgrammingOptimizer:
 
         # Find optimal damage and best move sequence
         move_sequence = []
+        battle_log = []
         current_state = initial_state.copy()
         turns = 0
 
@@ -159,12 +162,23 @@ class DynamicProgrammingOptimizer:
             if next_state is None:
                 break
 
+            # Extract battle events by comparing current_state to next_state
+            self._log_battle_events(current_state, next_state, best_move, turns + 1, battle_log)
+
             current_state = next_state
             turns += 1
 
         # Calculate final statistics
         success = current_state.player_won()
         total_damage = current_state.get_total_damage_dealt_to_opponent()
+
+        # Add final battle result to log
+        if current_state.is_battle_over():
+            battle_log.append({
+                "turn": turns,
+                "event": "battle_end",
+                "winner": "player" if current_state.player_won() else "opponent"
+            })
 
         return DPResult(
             success=success,
@@ -174,7 +188,8 @@ class DynamicProgrammingOptimizer:
             final_state=current_state,
             cache_hits=self.cache_hits,
             cache_misses=self.cache_misses,
-            states_explored=self.states_explored
+            states_explored=self.states_explored,
+            battle_log=battle_log
         )
 
     def _get_best_move(self, state: BattleState, depth: int) -> Optional[str]:
@@ -273,6 +288,131 @@ class DynamicProgrammingOptimizer:
         self.memo.insert(state_hash, result)
 
         return result
+
+    def _log_battle_events(
+        self,
+        before_state: BattleState,
+        after_state: BattleState,
+        player_move_name: str,
+        turn_num: int,
+        battle_log: List
+    ):
+        """
+        Extract battle events by comparing before and after states.
+        (Same implementation as Greedy algorithm)
+        """
+        from utils.typeEffectiveness import TYPE_CHART
+
+        # Get Pokemon before and after
+        player_before = before_state.get_active_player_pokemon()
+        opponent_before = before_state.get_active_opponent_pokemon()
+        player_after = after_state.get_active_player_pokemon()
+        opponent_after = after_state.get_active_opponent_pokemon()
+
+        # Log player's attack
+        opponent_damage = opponent_before.current_hp - opponent_after.current_hp
+        player_move = player_before.get_move(player_move_name)
+
+        if player_move:
+            effectiveness = TYPE_CHART.get_multiplier_dual_type(
+                player_move.type,
+                opponent_before.types[0],
+                opponent_before.types[1] if len(opponent_before.types) > 1 else opponent_before.types[0]
+            )
+
+            battle_log.append({
+                "turn": turn_num,
+                "event": "player_attack",
+                "attacker": {
+                    "name": player_before.name,
+                    "hp": player_before.current_hp,
+                    "maxHp": player_before.max_hp
+                },
+                "defender": {
+                    "name": opponent_before.name,
+                    "hpBefore": opponent_before.current_hp,
+                    "hpAfter": opponent_after.current_hp,
+                    "maxHp": opponent_before.max_hp
+                },
+                "move": player_move_name,
+                "damage": opponent_damage,
+                "effectiveness": effectiveness
+            })
+
+        # Check if opponent fainted
+        if opponent_after.is_fainted() and not opponent_before.is_fainted():
+            battle_log.append({
+                "turn": turn_num,
+                "event": "faint",
+                "pokemon": {
+                    "name": opponent_before.name,
+                    "team": "opponent"
+                }
+            })
+
+            # Check if opponent switched to new Pokemon
+            if after_state.opponent_active != before_state.opponent_active:
+                new_opponent = after_state.get_active_opponent_pokemon()
+                if not new_opponent.is_fainted():
+                    battle_log.append({
+                        "turn": turn_num,
+                        "event": "switch",
+                        "pokemon": {
+                            "name": new_opponent.name,
+                            "hp": new_opponent.current_hp,
+                            "maxHp": new_opponent.max_hp,
+                            "team": "opponent"
+                        }
+                    })
+
+        # Log opponent's counterattack (if player took damage and didn't switch)
+        if player_before.name == player_after.name:
+            player_damage = player_before.current_hp - player_after.current_hp
+            if player_damage > 0:
+                battle_log.append({
+                    "turn": turn_num,
+                    "event": "opponent_attack",
+                    "attacker": {
+                        "name": opponent_after.name,
+                        "hp": opponent_after.current_hp,
+                        "maxHp": opponent_after.max_hp
+                    },
+                    "defender": {
+                        "name": player_before.name,
+                        "hpBefore": player_before.current_hp,
+                        "hpAfter": player_after.current_hp,
+                        "maxHp": player_before.max_hp
+                    },
+                    "move": "Counter",
+                    "damage": player_damage,
+                    "effectiveness": 1.0
+                })
+
+        # Check if player fainted
+        if player_after.is_fainted() and not player_before.is_fainted():
+            battle_log.append({
+                "turn": turn_num,
+                "event": "faint",
+                "pokemon": {
+                    "name": player_before.name,
+                    "team": "player"
+                }
+            })
+
+            # Check if player switched to new Pokemon
+            if after_state.player_active != before_state.player_active:
+                new_player = after_state.get_active_player_pokemon()
+                if not new_player.is_fainted():
+                    battle_log.append({
+                        "turn": turn_num,
+                        "event": "switch",
+                        "pokemon": {
+                            "name": new_player.name,
+                            "hp": new_player.current_hp,
+                            "maxHp": new_player.max_hp,
+                            "team": "player"
+                        }
+                    })
 
 
 def run_dp_optimizer(

@@ -74,7 +74,9 @@ def replay_battle(
         opponent_hp_before = opponent_pokemon.current_hp
 
         damage = DamageCalculator.calculate_damage(
-            player_pokemon, opponent_pokemon, player_move
+            player_pokemon, opponent_pokemon, player_move,
+            is_critical=False,  # No critical hits for consistency
+            random_roll=236  # Average of 217-255 for deterministic damage
         )
         opponent_pokemon.take_damage(damage)
 
