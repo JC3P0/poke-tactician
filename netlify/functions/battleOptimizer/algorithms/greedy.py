@@ -300,12 +300,14 @@ class GreedyBattleOptimizer:
                         }
                     })
 
-        # Log opponent's counterattack (if player took damage and didn't switch)
-        if player_before.name == player_after.name:
-            player_damage = player_before.current_hp - player_after.current_hp
+        # Check if player Pokemon changed (switched)
+        if after_state.player_active != before_state.player_active:
+            # Get the Pokemon that WAS active (might have fainted)
+            old_pokemon = after_state.player_team[before_state.player_active]
+
+            # Check if that Pokemon took damage from opponent (log the attack that caused switch/faint)
+            player_damage = player_before.current_hp - old_pokemon.current_hp
             if player_damage > 0:
-                # Try to determine which move opponent used
-                # We'll log it as opponent_attack
                 battle_log.append({
                     "turn": turn_num,
                     "event": "opponent_attack",
@@ -317,18 +319,13 @@ class GreedyBattleOptimizer:
                     "defender": {
                         "name": player_before.name,
                         "hpBefore": player_before.current_hp,
-                        "hpAfter": player_after.current_hp,
+                        "hpAfter": old_pokemon.current_hp,
                         "maxHp": player_before.max_hp
                     },
-                    "move": "Counter",  # Generic name since we don't track opponent move
+                    "move": "Counter",
                     "damage": player_damage,
-                    "effectiveness": 1.0  # We don't know exact effectiveness
+                    "effectiveness": 1.0
                 })
-
-        # Check if player Pokemon changed (switched)
-        if after_state.player_active != before_state.player_active:
-            # Get the Pokemon that WAS active (might have fainted)
-            old_pokemon = after_state.player_team[before_state.player_active]
 
             # Check if that Pokemon fainted
             if old_pokemon.is_fainted() and not player_before.is_fainted():
@@ -353,6 +350,29 @@ class GreedyBattleOptimizer:
                             "maxHp": new_player.max_hp,
                             "team": "player"
                         }
+                    })
+        else:
+            # Player didn't switch - check if they took damage from counterattack
+            if player_before.name == player_after.name:
+                player_damage = player_before.current_hp - player_after.current_hp
+                if player_damage > 0:
+                    battle_log.append({
+                        "turn": turn_num,
+                        "event": "opponent_attack",
+                        "attacker": {
+                            "name": opponent_after.name,
+                            "hp": opponent_after.current_hp,
+                            "maxHp": opponent_after.max_hp
+                        },
+                        "defender": {
+                            "name": player_before.name,
+                            "hpBefore": player_before.current_hp,
+                            "hpAfter": player_after.current_hp,
+                            "maxHp": player_before.max_hp
+                        },
+                        "move": "Counter",
+                        "damage": player_damage,
+                        "effectiveness": 1.0
                     })
 
 
