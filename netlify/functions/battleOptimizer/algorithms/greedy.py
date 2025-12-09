@@ -325,19 +325,23 @@ class GreedyBattleOptimizer:
                     "effectiveness": 1.0  # We don't know exact effectiveness
                 })
 
-        # Check if player fainted
-        if player_after.is_fainted() and not player_before.is_fainted():
-            battle_log.append({
-                "turn": turn_num,
-                "event": "faint",
-                "pokemon": {
-                    "name": player_before.name,
-                    "team": "player"
-                }
-            })
+        # Check if player Pokemon changed (switched)
+        if after_state.player_active != before_state.player_active:
+            # Get the Pokemon that WAS active (might have fainted)
+            old_pokemon = after_state.player_team[before_state.player_active]
 
-            # Check if player switched to new Pokemon
-            if after_state.player_active != before_state.player_active:
+            # Check if that Pokemon fainted
+            if old_pokemon.is_fainted() and not player_before.is_fainted():
+                battle_log.append({
+                    "turn": turn_num,
+                    "event": "faint",
+                    "pokemon": {
+                        "name": player_before.name,
+                        "team": "player"
+                    }
+                })
+
+                # Log the switch to new Pokemon
                 new_player = after_state.get_active_player_pokemon()
                 if not new_player.is_fainted():
                     battle_log.append({
