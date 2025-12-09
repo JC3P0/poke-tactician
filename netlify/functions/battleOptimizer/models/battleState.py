@@ -235,8 +235,9 @@ class BattleState:
             )
 
             # OPTIMIZATION: Skip immune moves (0 damage) to reduce graph size
-            if damage == 0:
-                continue  # Don't explore this branch
+            # DISABLED: This was causing Dijkstra to miss victory paths!
+            # if damage == 0:
+            #     continue  # Don't explore this branch
 
             # Apply damage
             defender.take_damage(damage)
