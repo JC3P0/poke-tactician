@@ -37,14 +37,14 @@ class BattleEvent:
 
 def replay_battle(
     initial_state: BattleState,
-    move_sequence: List[tuple[int, str]]
+    move_sequence: List[str]
 ) -> tuple[List[Dict[str, Any]], BattleState]:
     """
     Replay a battle with detailed logging.
 
     Args:
         initial_state: Starting battle state
-        move_sequence: List of (pokemon_index, move_name) tuples
+        move_sequence: List of move names (auto-switch handles Pokemon changes)
 
     Returns:
         Tuple of (battle_log, final_state)
@@ -54,31 +54,17 @@ def replay_battle(
     battle_log = []
     state = initial_state.copy()
 
-    for turn_num, move_info in enumerate(move_sequence, 1):
-        # Unpack Pokemon index and move name
-        pokemon_index, move_name = move_info
-
-        # Switch to correct Pokemon if needed
-        if state.player_active != pokemon_index:
-            # Log the switch
-            new_pokemon = state.player_team[pokemon_index]
-            battle_log.append({
-                "turn": turn_num,
-                "event": "switch",
-                "pokemon": {
-                    "name": new_pokemon.name,
-                    "hp": new_pokemon.current_hp,
-                    "maxHp": new_pokemon.max_hp,
-                    "team": "player"
-                }
-            })
-            state.player_active = pokemon_index
-
-        # Get active Pokemon
+    for turn_num, move_name in enumerate(move_sequence, 1):
+        # Get active Pokemon (auto-switch handles Pokemon changes)
         player_pokemon = state.get_active_player_pokemon()
         opponent_pokemon = state.get_active_opponent_pokemon()
 
-        # Record player's move
+        # Check if player has lost (all Pokemon fainted)
+        if player_pokemon.is_fainted():
+            # Battle is over
+            break
+
+        # Get the move for current active Pokemon
         player_move = player_pokemon.get_move(move_name)
         if not player_move:
             continue
@@ -171,7 +157,8 @@ def replay_battle(
 
                     min_priority = min(p for _, p in move_priorities)
                     best_moves = [m for m, p in move_priorities if p == min_priority]
-                    opponent_move = random.choice(best_moves)
+                    # DETERMINISTIC selection (same as battleState.py for consistency)
+                    opponent_move = max(best_moves, key=lambda m: m.power)
 
                     # Opponent attacks
                     opponent_hp_before = opponent_pokemon.current_hp

@@ -185,7 +185,7 @@ class BattleState:
     def generate_successor_states(
         self,
         include_switches: bool = False
-    ) -> List[Tuple['BattleState', Move, int, int]]:
+    ) -> List[Tuple['BattleState', Move, int]]:
         """
         Generate all possible successor states from this state.
 
@@ -198,8 +198,8 @@ class BattleState:
             include_switches: Whether to include Pokemon switches as actions
 
         Returns:
-            List of tuples: (successor_state, move_used, damage_dealt, pokemon_index)
-            - pokemon_index: Which player Pokemon (0-5) used the move
+            List of tuples: (successor_state, move_used, damage_dealt)
+            Note: Auto-switching handles Pokemon changes automatically
 
         Time Complexity: O(m) where m is number of moves (usually 4)
         """
@@ -210,7 +210,6 @@ class BattleState:
 
         active_player = self.get_active_player_pokemon()
         active_opponent = self.get_active_opponent_pokemon()
-        active_player_index = self.player_active  # Track which Pokemon is using moves
 
         # Generate successors for each usable move
         for move in active_player.moves:
@@ -297,8 +296,8 @@ class BattleState:
             # Increment turn
             next_state.turn += 1
 
-            # Add to successors (include which Pokemon used the move!)
-            successors.append((next_state, move, damage, active_player_index))
+            # Add to successors (auto-switch handles Pokemon changes)
+            successors.append((next_state, move, damage))
 
         # TODO: Add switch actions if include_switches=True
         # For now, we focus on attack actions only
