@@ -14,14 +14,10 @@ const HomePage = () => {
         </h1>
         <p className={homeStyles.subtitle}>Gen 1 Battle Optimizer</p>
 
-
-        <div className={homeStyles.featureGrid}>
-          <div className={homeStyles.featureCard}>
-            <span className={homeStyles.featureIcon}>⚡</span>
-            <h3>Authentic Gen 1</h3>
-            <p>DVs (0-15), unified Special stat, speed-based crits</p>
-          </div>
-
+        <div className={homeStyles.description}>
+          <p>Build your optimal Pokemon team and test strategies against legendary trainers.</p>
+          <p>Uses advanced algorithms (Greedy, Dynamic Programming, Dijkstra) to find the best battle approach.</p>
+          <p>Authentic Gen 1 mechanics with DVs, unified Special stat, and speed-based critical hits.</p>
         </div>
 
         <div className={homeStyles.ctaSection}>
@@ -30,12 +26,6 @@ const HomePage = () => {
             onClick={() => navigate('/team-builder')}
           >
             Build Your Team
-          </button>
-          <button
-            className={homeStyles.secondaryButton}
-            onClick={() => navigate('/boss-selector')}
-          >
-            View Boss Trainers
           </button>
         </div>
 
