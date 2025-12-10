@@ -86,7 +86,7 @@ const Results = () => {
       <div style={{ padding: '2rem', color: 'white', background: '#2c3e50', minHeight: '100vh' }}>
         <h1>Error: No Battle Data</h1>
         <p>Please start from Team Builder</p>
-        <button onClick={() => navigate('/team-builder')}>� Back to Team Builder</button>
+        <button onClick={() => navigate('/team-builder')}>Back to Team Builder</button>
       </div>
     );
   }
@@ -96,9 +96,9 @@ const Results = () => {
       <div style={{ padding: '2rem', color: 'white', background: '#2c3e50', minHeight: '100vh', textAlign: 'center' }}>
         <h1 style={{ color: '#ffcb05', fontSize: '2.5rem', marginBottom: '2rem' }}>Running Battle Simulations...</h1>
         <div style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
-          <div>� Greedy Algorithm (Heap-based)</div>
-          <div>>� Dynamic Programming (Hash Table memoization)</div>
-          <div>=� Dijkstra's Algorithm (Graph shortest path)</div>
+          <div>Greedy Algorithm (Heap-based)</div>
+          <div>Dynamic Programming (Hash Table memoization)</div>
+          <div>Dijkstra's Algorithm (Graph shortest path)</div>
         </div>
         <div style={{ marginTop: '2rem', fontSize: '1rem', opacity: 0.7 }}>
           This may take a few seconds...
@@ -125,7 +125,7 @@ const Results = () => {
             borderRadius: '8px'
           }}
         >
-          � Back to Boss Selection
+          Back to Boss Selection
         </button>
 
         <h1 style={{ color: '#ffcb05', fontSize: '2.5rem', margin: 0 }}>
@@ -146,7 +146,7 @@ const Results = () => {
               fontWeight: 'bold'
             }}
           >
-            =� Download Results (JSON)
+            Download Results (JSON)
           </button>
         )}
       </div>
@@ -198,7 +198,7 @@ const Results = () => {
           padding: '1rem',
           marginBottom: '2rem'
         }}>
-          <strong>� Errors:</strong>
+          <strong>Errors:</strong>
           <ul>
             {errors.map((error, i) => (
               <li key={i}>{error}</li>
@@ -215,15 +215,9 @@ const Results = () => {
             if (!result) return null;
 
             const algorithmNames = {
-              greedy: 'Greedy (Heap)',
-              dp: 'Dynamic Programming (Hash Table)',
-              dijkstra: "Dijkstra's Algorithm (Graph)"
-            };
-
-            const algorithmIcons = {
-              greedy: '�',
-              dp: '>�',
-              dijkstra: '=�'
+              greedy: 'Greedy',
+              dp: 'Dynamic Programming',
+              dijkstra: "Dijkstra's Algorithm"
             };
 
             return (
@@ -233,14 +227,13 @@ const Results = () => {
                 padding: '1.5rem',
                 border: '2px solid rgba(255,203,5,0.3)'
               }}>
-                <h2 style={{ color: '#ffcb05', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>{algorithmIcons[algorithm]}</span>
+                <h2 style={{ color: '#ffcb05', marginBottom: '1rem' }}>
                   {algorithmNames[algorithm]}
                 </h2>
 
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>
-                    <strong>Result:</strong> {result.victory ? ' Victory!' : 'L Defeat'}
+                    <strong>Result:</strong> {result.victory ? 'Victory' : 'Defeat'}
                   </div>
                   <div><strong>Total Damage:</strong> {result.totalDamage}</div>
                   <div><strong>Turns:</strong> {result.turns}</div>
@@ -393,7 +386,7 @@ const Results = () => {
                   <tr key={algorithm} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                     <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>{algorithmNames[algorithm]}</td>
                     <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                      {result.victory ? '' : 'L'}
+                      {result.victory ? 'Victory' : 'Defeat'}
                     </td>
                     <td style={{ padding: '0.75rem', textAlign: 'center' }}>{result.totalDamage}</td>
                     <td style={{ padding: '0.75rem', textAlign: 'center' }}>{result.turns}</td>
