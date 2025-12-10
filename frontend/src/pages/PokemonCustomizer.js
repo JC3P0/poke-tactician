@@ -4,7 +4,7 @@ import { getImageOrPlaceholder } from '../utils/getImageOrPlaceholder';
 import { savePokemonToTeam } from '../utils/indexedDB';
 import customizerStyles from '../styles/PokemonCustomizer.module.css';
 import typeColors from '../utils/typeColors';
-import { formatMoveDisplay } from '../data/gen1MovesData';
+import { formatMoveDisplay, GEN1_MOVES_DATA } from '../data/gen1MovesData';
 
 const PokemonCustomizer = () => {
   const { id } = useParams();
@@ -27,13 +27,30 @@ const PokemonCustomizer = () => {
   });
   // If editing from team, pokemon.selectedMoves has the 4 chosen moves
   // Otherwise, initialize with empty slots
-  const [moves, setMoves] = useState(pokemon?.selectedMoves || [null, null, null, null]);
+  // FILTER OUT any non-Gen 1 moves that might have been saved previously
+  const [moves, setMoves] = useState(() => {
+    if (pokemon?.selectedMoves) {
+      // Filter out non-Gen 1 moves and pad to 4 slots
+      const gen1Moves = pokemon.selectedMoves
+        .filter(move => !move || GEN1_MOVES_DATA[move.toLowerCase()])
+        .slice(0, 4);
+      // Pad with nulls to ensure 4 slots
+      while (gen1Moves.length < 4) {
+        gen1Moves.push(null);
+      }
+      return gen1Moves;
+    }
+    return [null, null, null, null];
+  });
   const [errors, setErrors] = useState([]);
 
   // Get available moves for THIS specific Pokemon (from MongoDB)
   // pokemon.moves contains ALL learnable moves (from MongoDB)
   // pokemon.selectedMoves contains the 4 chosen moves (if editing)
-  const availableMoves = pokemon?.moves || [];
+  // FILTER TO GEN 1 MOVES ONLY - MongoDB includes Gen 2+ moves we don't support
+  const availableMoves = pokemon?.moves?.filter(move =>
+    GEN1_MOVES_DATA[move.toLowerCase()]
+  ) || [];
 
   // Get available moves for a specific slot (excludes already selected moves)
   const getAvailableMovesForSlot = (currentSlotIndex) => {
