@@ -1,11 +1,11 @@
-.home-container {
+.homeContainer {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 2rem;
 }
 
-.hero-section {
+.heroSection {
   max-width: 1200px;
   margin: 0 auto;
   text-align: center;
@@ -44,14 +44,14 @@
   margin-bottom: 1rem;
 }
 
-.feature-grid {
+.featureGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 2rem;
   margin: 3rem 0;
 }
 
-.feature-card {
+.featureCard {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-radius: 12px;
@@ -59,28 +59,28 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.feature-card:hover {
+.featureCard:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-.feature-icon {
+.featureIcon {
   font-size: 3rem;
   display: block;
   margin-bottom: 1rem;
 }
 
-.feature-card h3 {
+.featureCard h3 {
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
 }
 
-.feature-card p {
+.featureCard p {
   opacity: 0.9;
   line-height: 1.6;
 }
 
-.cta-section {
+.ctaSection {
   margin: 3rem 0;
   display: flex;
   gap: 1rem;
@@ -88,7 +88,7 @@
   flex-wrap: wrap;
 }
 
-.primary-button {
+.primaryButton {
   background: #ffcb05;
   color: #2a75bb;
   border: none;
@@ -101,13 +101,13 @@
   box-shadow: 0 4px 15px rgba(255, 203, 5, 0.3);
 }
 
-.primary-button:hover {
+.primaryButton:hover {
   background: #f7b801;
   transform: scale(1.05);
   box-shadow: 0 6px 20px rgba(255, 203, 5, 0.5);
 }
 
-.secondary-button {
+.secondaryButton {
   background: transparent;
   color: white;
   border: 2px solid white;
@@ -119,12 +119,12 @@
   transition: all 0.3s ease;
 }
 
-.secondary-button:hover {
+.secondaryButton:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.05);
 }
 
-.gen1-info {
+.gen1Info {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-radius: 12px;
@@ -133,32 +133,32 @@
   text-align: left;
 }
 
-.gen1-info h3 {
+.gen1Info h3 {
   font-size: 2rem;
   margin-bottom: 1rem;
   text-align: center;
 }
 
-.gen1-info ul {
+.gen1Info ul {
   list-style: none;
   padding: 0;
 }
 
-.gen1-info li {
+.gen1Info li {
   padding: 0.8rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   line-height: 1.6;
 }
 
-.gen1-info li:last-child {
+.gen1Info li:last-child {
   border-bottom: none;
 }
 
-.gen1-info strong {
+.gen1Info strong {
   color: #ffcb05;
 }
 
-.home-footer {
+.homeFooter {
   margin-top: 4rem;
   padding-top: 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.3);
@@ -183,17 +183,17 @@
     font-size: 1rem;
   }
 
-  .feature-grid {
+  .featureGrid {
     grid-template-columns: 1fr;
   }
 
-  .cta-section {
+  .ctaSection {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .primary-button,
-  .secondary-button {
+  .primaryButton,
+  .secondaryButton {
     width: 100%;
   }
 }
