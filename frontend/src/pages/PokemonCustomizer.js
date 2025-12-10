@@ -4,6 +4,7 @@ import { getImageOrPlaceholder } from '../utils/getImageOrPlaceholder';
 import { savePokemonToTeam } from '../utils/indexedDB';
 import customizerStyles from '../styles/PokemonCustomizer.module.css';
 import typeColors from '../utils/typeColors';
+import { formatMoveDisplay } from '../data/gen1MovesData';
 
 const PokemonCustomizer = () => {
   const { id } = useParams();
@@ -33,15 +34,6 @@ const PokemonCustomizer = () => {
   // pokemon.moves contains ALL learnable moves (from MongoDB)
   // pokemon.selectedMoves contains the 4 chosen moves (if editing)
   const availableMoves = pokemon?.moves || [];
-
-  // Helper function to capitalize move names properly
-  const capitalizeMoves = (moveName) => {
-    if (!moveName) return '';
-    return moveName
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
 
   // Get available moves for a specific slot (excludes already selected moves)
   const getAvailableMovesForSlot = (currentSlotIndex) => {
@@ -304,13 +296,13 @@ const PokemonCustomizer = () => {
                       {/* Show currently selected move even if it would be filtered */}
                       {currentMove && !availableMovesForThisSlot.includes(currentMove) && (
                         <option value={currentMove}>
-                          {capitalizeMoves(currentMove)}
+                          {formatMoveDisplay(currentMove)}
                         </option>
                       )}
                       {/* Show available moves for this slot */}
                       {availableMovesForThisSlot.map((moveName, i) => (
                         <option key={i} value={moveName}>
-                          {capitalizeMoves(moveName)}
+                          {formatMoveDisplay(moveName)}
                         </option>
                       ))}
                     </select>
