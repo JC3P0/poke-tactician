@@ -16,7 +16,6 @@ const HomePage = () => {
 
         <div className={homeStyles.description}>
           <p>Build your optimal Pokemon team and test strategies against legendary trainers.</p>
-          <p>Uses advanced algorithms (Greedy, Dynamic Programming, Dijkstra) to find the best battle approach.</p>
           <p>Authentic Gen 1 mechanics with DVs, unified Special stat, and speed-based critical hits.</p>
         </div>
 
